@@ -1,0 +1,48 @@
+mysql:
+  host: 127.0.0.1
+  user: op_test
+  dbname: test
+  pwd: test
+  port: 3306
+  maxIdleConns: 20
+  maxOpenConns: 50
+  maxConnLifeTime: 550
+  type: mysql
+  dbcharset: utf8
+
+log:
+  loglevel: info
+  logmaxage: 7
+  logfile: ./gin-demo.log
+
+server:
+  ishttps: false
+  host: 0.0.0.0
+  port: 8041
+  #release(生产)/test(测试)
+  mode: release
+  ssl:
+    key: keystring
+    pem: temp/pem.pem
+
+redis:
+  ip: 127.0.0.1
+  port: 6379
+
+sms:
+  - type: aliyun
+    ak: xxxxxxxxxx
+    sk: xxxxxxxxxx
+    endpoint: xxxxxxxx
+    signname: xxxxxxx
+    tplnum: xxxxxxx
+  - type: tencent
+    ak: xxxxxxxxxx
+    sk: xxxxxxxxxx
+    endpoint: xxxxxxxx
+    signname: xxxxxxx
+    tplnum: xxxxxxx
+    region:
+    appid:
+util:
+ initkey: xxxxxxxxx
