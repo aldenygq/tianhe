@@ -6,7 +6,7 @@ const (
 )
 
 const (
-	MAXAGE = 3600*24
+	//MAXAGE = 60*5
 	SECRETKEY = "42wqTE23123wffLU94342wgldgFs"
 	CACHE_BLACK_TOKEN="black.token."
 )

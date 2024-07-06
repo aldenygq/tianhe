@@ -2,15 +2,15 @@ package middleware
 
 import (
 	"fmt"
-	
+	//"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 )
 
 type CustomClaims struct {
 	UEnName string
-	//EmployeeNum string
-	//Email string
-	//UCnName string
 	jwt.StandardClaims
 }
 //产生token
@@ -32,28 +32,80 @@ func ParseToken(tokenString string) (*CustomClaims,error)  {
 		return nil,err
 	}
 }
+
+
 //加入到黑名单
-func DelToken(token string ) error {
-	// 从池里获取连接
-	_,err := RedisClient.Get(token).Result()
-	if err != nil {
-		return err
-	}
-	// 用完后将连接放回连接池
-	defer RedisClient.Close()
-	err = RedisClient.Del(token).Err()
+func DelToken(uname string ) error {
+	err := RedisClient.Del(uname).Err()
 	if err != nil {
 		return err
 	}
 	return nil
 }
-//检查token是否存在
-func CheckToken(token string) bool  {
-	 err := RedisClient.Get(token).Err()
-	 if err != nil {
-	 	return false
-	 }
-	// 用完后将连接放回连接池
-	defer RedisClient.Close()
-	return true
+
+func Auth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		Logger.Infof("access token:%v\n",ACCESS_TOKEN)
+		auth := c.Request.Header.Get(ACCESS_TOKEN)
+		if len(auth) == 0 {
+			c.Abort()
+			Logger.Errorf("token %v invalid\n",auth)
+			c.JSON(200, gin.H{
+				"errno":"401",
+				"errmsg": "token invalid",
+				"data":"",
+			})
+			return
+		}
+		ret,err:= ParseToken(auth)
+		if err != nil {
+			c.Abort()
+			Logger.Error("user login info expired:",err)
+			c.JSON(200, gin.H{
+				"errno":"401",
+				"errmsg": "user login info expired",
+				"data":"",
+			})
+			return 
+		}
+		Logger.Info("user name:",ret.UEnName)
+		val,err := RedisClient.Get(ret.UEnName).Result()
+		Logger.Info("val:",val)
+		if err != nil || val != auth{
+			c.Abort()
+			Logger.Errorf("user %v not login",ret.UEnName)
+			c.JSON(200, gin.H{
+				"errno":"401",
+				"errmsg": "user login info expired",
+				"data":"",
+			})
+			return 
+		}
+		c.Next()
+	}
+}
+
+func DoLogin(c *gin.Context,enname string,expire int64) (string,error) {
+	customClaims :=&CustomClaims{
+		UEnName:         enname,
+		StandardClaims: jwt.StandardClaims{
+			//ExpiresAt: time.Now().Add(time.Duration(MAXAGE)*time.Second).Unix(), // 过期时间，必须设置
+			ExpiresAt: time.Now().Add(time.Duration(expire)*time.Second).Unix(), // 过期时间，必须设置
+			Issuer:    "alden",
+		},
+	}
+	accessToken, err :=customClaims.MakeToken()
+	if err != nil {
+		Logger.Error("create access token failed:%v",err)
+		return "",err
+	}
+	
+	//存储登陆状态
+	err = RedisClient.Set(enname,accessToken,time.Duration(expire)*time.Second).Err()
+	if err != nil {
+		Logger.Error("save access token to redis failed:%v",accessToken)
+		return "",err
+	}
+	
+	return accessToken,nil 
 }

@@ -5,7 +5,7 @@ import (
 	"oncall/app"
 	"oncall/middleware"
 )
-
+/*
 func registerOncallRouter(oncall *gin.RouterGroup) {
 	t := oncall.Group("/v1")
 	{
@@ -21,6 +21,7 @@ func registerOncallRouter(oncall *gin.RouterGroup) {
 		t.POST("/currentdutyinfos",app.CurrrentDutyInfos)
 	}
 }
+*/
 
 //用户中心
 func registerUserRouter(user *gin.RouterGroup) {
@@ -28,20 +29,26 @@ func registerUserRouter(user *gin.RouterGroup) {
 	{
 		//用户注册
 		u.POST("/register", app.UserRegister)
-		//用户信息
-		u.GET("/info", app.UserInfo).Use(middleware.Auth)
-		//修改密码
-		u.POST("/modifypassword", app.ModifyPassword).Use(middleware.Auth)
 		//忘记密码
-		u.POST("/forgotpassword", app.ForgotPassword)
-		//启用/禁用用户
-		u.POST("/modifystatus", app.ModifyUserStatus).Use(middleware.Auth)
+		u.POST("/forgotPassword", app.ForgotPassword)
+		//发送密码
+		//u.POST("/sendsms", app.SendSms)
+
+		u.Use(middleware.Auth())
+		//用户信息(需要认证)
+		u.GET("/info", app.UserInfo)
+		//用户设置登录token有效期
+		u.POST("/setTokenExpire", app.SetTokenExpire)
+		//修改密码
+		u.POST("/modifypassword", app.ModifyPassword)
+		//启用/禁用/删除用户
+		u.POST("/modifystatus", app.ModifyUserStatus)
 		//用户列表
-		u.GET("/list", app.UserList).Use(middleware.Auth)
-		//删除用户
-		u.DELETE("/delete", app.DeleteUser).Use(middleware.Auth)
+		u.GET("/list", app.UserList)
+		//用户注销
+		u.POST("/unregister", app.Unregister)
 		//修改用户信息
-		u.POST("/modifyuserinfo",app.ModifyUserInfo).Use(middleware.Auth)
+		u.POST("/modifyuserinfo",app.ModifyUserInfo)
 	}
 }
 
@@ -51,17 +58,17 @@ func registerLoginRouter(auth *gin.RouterGroup) {
 	{
 		//用户登录
 		a.POST("/login", app.Login)
-		//发送密码
-		a.POST("/sendsms", app.SendSms)
-		//登出
-		a.POST("/logout", app.Logout).Use(middleware.Auth)
 		//查询用户登陆状态
-		a.GET("/checkuserLogin", app.CheckUseLogin)
+		a.GET("/checkuserLoginByUname", app.CheckUseLoginByUname)
+		a.GET("/checkuserLoginByToken", app.CheckUseLoginByToken)
+		a.Use(middleware.Auth())
+		//登出
+		a.POST("/logout", app.Logout)
 		//token续期
 		//a.GET("/renewal", app.Renewal).Use(middleware.Auth)
 	}
 }
-
+/*
 func registerKeyRouter(key *gin.RouterGroup) {
 	k := key.Group("/v1")
 	{
@@ -69,11 +76,14 @@ func registerKeyRouter(key *gin.RouterGroup) {
 		k.POST("/addkey", app.AddKey)
 	}
 }
+*/
 //健康检测
 func registerHealthRouter(health *gin.RouterGroup) {
-	health.GET("/ping", func(c *gin.Context) {
+	health.GET("/status", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"message": "ping",
+			"errno":"200",
+			"errmsg": "OK",
+			"data":"",
 		})
 	})
 }

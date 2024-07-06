@@ -22,6 +22,7 @@ type SmsInfo struct {
 }
 type UtilInfo struct {
 	InitKey  string `yaml:"initkey"`
+	AuthTokenExpire int64 `yaml:"authTokenExpire"`
 }
 type LogConfig struct {
 	Loglevel  string        `yaml:"loglevel"`

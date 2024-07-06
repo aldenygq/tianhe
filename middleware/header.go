@@ -4,11 +4,12 @@ import (
 	//"encoding/base64"
 	"fmt"
 	"net/http"
+	//"oncall/middleware"
+
 	//"net/url"
 	//"strconv"
 	"time"
 	//"oncall/models"
-	"github.com/golang-jwt/jwt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -55,88 +56,8 @@ func NoRoute(c *gin.Context) {
 	ctx.Response(HTTP_NOT_FOUND_CODE, fmt.Sprintf("%s %s not found", method, path), nil)
 }
 
-//func GetParam(c *gin.Context,key string) string {
-//	val := c.GetHeader(key)
-//	if val != ""{
-//		return val,true
-//	}
-	//val,err := c.Cookie(key)
-	//if err != nil {
-	//	return "",false
-	//}
-//	return "",true
-//}
 
 
-func Auth(c *gin.Context){
-	//ctx := Context{Ctx: c}
-	//var user *models.Users = &models.Users{}
-	accessToken := c.GetHeader(ACCESS_TOKEN)
-	if  accessToken == "" {
-		//c.Abort()//组织调起其他函数
-		c.Redirect(http.StatusMovedPermanently, "/tianhe/auth/v1/login")
-		//ctx.Response(HTTP_NO_LOGIN, fmt.Sprintf("用户未登录"), nil)
-		//return
-	}
-	ret,err:= ParseToken(accessToken)
-	if err != nil {
-		//
-		//c.Abort()
-		//ctx.Response(HTTP_TOKEN_INVALID, fmt.Sprintf(err.Error()), nil)
-		//return
-		c.Redirect(http.StatusMovedPermanently, "/tianhe/auth/v1/login")
-	}
-	//不存在代表未登录
-	has := CheckToken(accessToken)
-	if !has {
-		//c.Abort()//组织调起其他函数
-		//ctx.Response(HTTP_NO_LOGIN, fmt.Sprintf(err.Error()), nil)
-		//return
-		c.Redirect(http.StatusMovedPermanently, "/tianhe/auth/v1/login")
-	}
-	c.Set("User_En_Name",ret.UEnName)
-	c.Next()
-	return
-}
-
-func DoLogin(c *gin.Context,enname string)  error{
-	customClaims :=&CustomClaims{
-		UEnName:         enname,
-		//Email: user.Email
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Duration(MAXAGE)*time.Second).Unix(), // 过期时间，必须设置
-		},
-	}
-	accessToken, err :=customClaims.MakeToken()
-	if err != nil {
-		return err
-	}
-	
-	refreshClaims :=&CustomClaims{
-		UEnName:        enname,
-		//Email: user.Email
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Duration(MAXAGE+1800)*time.Second).Unix(), // 过期时间，必须设置
-		},
-	}
-	refreshToken, err :=refreshClaims.MakeToken()
-	if err != nil {
-		return err
-	}
-	
-	//存储登陆状态
-	//authUser := base64.StdEncoding.EncodeToString([]byte(user.EnName))
-	//设置登陆状态
-	err = RedisClient.Set(accessToken,enname,time.Duration(MAXAGE)*time.Second).Err()
-	if err != nil {
-		return err
-	}
-	
-	c.Header(ACCESS_TOKEN,accessToken)
-	c.Header(REFRESH_TOKEN,refreshToken)
-	
-	return nil
-}
 //判断是否https
 func IsHttps(c *gin.Context) bool {
 	if c.GetHeader("X-Forwarded-Proto") =="https" || c.Request.TLS!=nil{

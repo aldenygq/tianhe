@@ -1,8 +1,8 @@
 mysql:
   host: 127.0.0.1
-  user: op_test
-  dbname: test
-  pwd: test
+  user: ops
+  dbname: ops
+  pwd: ops_test
   port: 3306
   maxIdleConns: 20
   maxOpenConns: 50
@@ -13,7 +13,7 @@ mysql:
 log:
   loglevel: info
   logmaxage: 7
-  logfile: ./gin-demo.log
+  logfile: ./oncall.log
 
 server:
   ishttps: false
@@ -45,4 +45,5 @@ sms:
     region:
     appid:
 util:
- initkey: xxxxxxxxx
+ initkey: MazsiS0vKQ201MIy
+ authTokenExpire: 600

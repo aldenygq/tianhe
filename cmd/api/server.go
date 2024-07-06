@@ -11,10 +11,10 @@ import (
 	"time"
 	
 	"oncall/config"
-	"oncall/pkg"
+	//"oncall/pkg"
 	"oncall/middleware"
 	"oncall/routers"
-	"oncall/service"
+	//"oncall/service"
 	
 	//"oncall/tools"
 	
@@ -54,15 +54,15 @@ func setup() {
 	// 3. 初始化数据链接
 	middleware.InitDB()
 	//4、初始化sms客户端
-	pkg.InitSms()
+	//pkg.InitSms()
 	// 4. http客户端初始化
 	//httpclient.Init()
 	// 5. 启动异步任务队列
 	//go task.Start()
 	//6.启动定时任务客户端
-	go service.InitCron()
+	//go service.InitCron()
 	//7.初始化任务
-	go service.OncallTask()
+	//go service.OncallTask()
 }
 
 func run() error {
@@ -70,7 +70,7 @@ func run() error {
 	
 	//停服之前关闭数据库连接
 	defer func() {
-		err := databases.Sql.Close()
+		err := middleware.Sql.Close()
 		if err != nil {
 			middleware.Logger.Errorf("close mysql connection failed:%v",err)
 		}
@@ -95,7 +95,7 @@ func run() error {
 			}
 		}
 	}()
-	
+	/*
 	log.Printf("%s Server Run http://%s:%s/ \r\n",
 		tools.GetCurrntTimeStr(),
 		config.Conf.Server.Host,
@@ -106,12 +106,13 @@ func run() error {
 		config.Conf.Server.Host,
 		config.Conf.Server.Port)
 	log.Printf("%s Enter Control + C Shutdown Server \r\n", tools.GetCurrntTimeStr())
+	*/
 	
 	// 等待中断信号以优雅地关闭服务器（设置 5 秒的超时时间）
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt,syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Printf("%s Shutdown Server ... \r\n", tools.GetCurrntTimeStr())
+	//log.Printf("%s Shutdown Server ... \r\n", tools.GetCurrntTimeStr())
 	
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

@@ -1,20 +1,47 @@
 package app
 
 import (
+	//"encoding/json"
 	"fmt"
-	
-	"github.com/gin-gonic/gin"
+
 	"oncall/middleware"
 	"oncall/models"
 	"oncall/pkg"
 	"oncall/service"
+
+	"github.com/gin-gonic/gin"
 )
+//用户设置登录有效时长,用户在登录的情况在才可以设置，第一次登录时有效期为默认值
+func SetTokenExpire(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	var param models.ParamSetUserTokenExpire
+	err := ctx.ValidateJson(&param)
+	if err != nil {
+		middleware.Logger.Error("request param invalid")
+		return
+	}
+	accessToken := c.GetHeader(middleware.ACCESS_TOKEN)
+	if accessToken == "" {
+		middleware.Logger.Errorf("token invalid")
+		ctx.Response(middleware.HTTP_TOKEN_INVALID, fmt.Sprintf("用户未登录"), nil)
+		return
+	}
+	middleware.Logger.Info("token:",accessToken)
+	msg,err := service.SetTokenExpire(accessToken,param)
+	if err != nil {
+		middleware.Logger.Errorf("set token expire failed:%v\n",err)
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg,"")
+	return
+}
 //用户注册
 func UserRegister(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	//参数校验
 	var param models.ParamUserRegister
-	err := ctx.ValidateJson(param)
+	err := ctx.ValidateJson(&param)
 	if err != nil {
 		middleware.Logger.Error("request param invalid")
 		return
@@ -44,6 +71,7 @@ func UserInfo(c *gin.Context) {
 		ctx.Response(middleware.HTTP_TOKEN_INVALID, fmt.Sprintf("用户未登录"), nil)
 		return
 	}
+	middleware.Logger.Info("token:",accessToken)
 	data,msg,err := service.UserInfo(accessToken)
 	if err != nil {
 		middleware.Logger.Errorf("get user info failed:%v\n",err)
@@ -53,6 +81,7 @@ func UserInfo(c *gin.Context) {
 	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg,data)
 	return
 }
+
 //修改密码
 func ModifyPassword(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
@@ -87,7 +116,7 @@ func ForgotPassword(c *gin.Context) {
 	var (
 		param models.ParamForgotPassword
 	)
-	err := ctx.ValidateJson(param)
+	err := ctx.ValidateJson(&param)
 	if err != nil {
 		middleware.Logger.Error("request param invalid")
 		return
@@ -99,7 +128,7 @@ func ForgotPassword(c *gin.Context) {
 	}
 	msg,err := service.ForgotPassword(param)
 	if err != nil {
-		middleware.Logger.Errorf("modify user %v password failed:%v\n",user.Mobile,err)
+		middleware.Logger.Errorf("modify user %v password failed:%v\n",param.Mobile,err)
 		ctx.Response(middleware.HTTP_CHECK_FAILED, msg, "")
 		return
 	}
@@ -121,30 +150,7 @@ func ModifyUserStatus(c *gin.Context) {
 	}
 	msg,err := service.ModifyUserStatus(param)
 	if err != nil {
-		middleware.Logger.Errorf("modify user %v password failed:%v\n",user.Mobile,err)
-		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
-		return
-	}
-	
-	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg,nil)
-	return
-}
-
-//删除用户
-func DeleteUser(c *gin.Context) {
-	ctx := middleware.Context{Ctx: c}
-	//参数校验
-	var (
-		param models.ParamUserEnName
-	)
-	err := ctx.Validate(param)
-	if err != nil {
-		middleware.Logger.Error("request param invalid")
-		return
-	}
-	msg,err := service.DeleteUser(param)
-	if err != nil {
-		middleware.Logger.Errorf("delete user %v failed:%v\n",param.EnName,err)
+		middleware.Logger.Errorf("modify user %v password failed:%v\n",param.EnName,err)
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -182,6 +188,11 @@ func ModifyUserInfo(c *gin.Context) {
 	var (
 		param models.ParamModifyUserInfo
 	)
+	err := ctx.ValidateJson(param)
+	if err != nil {
+		middleware.Logger.Error("request param invalid")
+		return
+	}
 	accessToken := c.GetHeader(middleware.ACCESS_TOKEN)
 	if accessToken == "" {
 		middleware.Logger.Errorf("token invalid")
@@ -199,11 +210,6 @@ func ModifyUserInfo(c *gin.Context) {
 		ctx.Response(middleware.HTTP_TOKEN_INVALID, fmt.Sprintf("用户登录状态异常"), nil)
 		return
 	}
-	err := ctx.ValidateJson(param)
-	if err != nil {
-		middleware.Logger.Error("request param invalid")
-		return
-	}
 	msg,err := service.ModifyUserInfo(param)
 	if err != nil {
 		middleware.Logger.Errorf("modify user %v info failed:%v\n",param.EnName,err)
@@ -211,6 +217,24 @@ func ModifyUserInfo(c *gin.Context) {
 		return
 	}
 	
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg,nil)
+	return
+}
+
+func Unregister(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	accessToken := c.GetHeader(middleware.ACCESS_TOKEN)
+	if accessToken == "" {
+		middleware.Logger.Errorf("token invalid")
+		ctx.Response(middleware.HTTP_TOKEN_INVALID, fmt.Sprintf("用户未登录"), nil)
+		return
+	}
+	msg,err := service.Unregister(accessToken)
+	if err != nil {
+		middleware.Logger.Errorf("%v",err)
+		ctx.Response(middleware.HTTP_TOKEN_INVALID, fmt.Sprintf("用户注销失败"), nil)
+		return
+	}
 	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg,nil)
 	return
 }

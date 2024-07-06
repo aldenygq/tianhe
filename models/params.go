@@ -8,6 +8,9 @@ type ParamHeader struct {
 	Uname string `header:"User_En_Name" binding:"required,min=1" label:"请求header(用户英文名)"`
 }
  */
+ type ParamSetUserTokenExpire struct {
+	ExpireTime int64 `form:"expire_time"  json:"expire_time" binding:"omitempty,gt=0" label:"token 有效期"`
+}
 type ParamLogin struct {
 	Type string `form:"type"  json:"type" binding:"required,min=1" label:"登陆类型" description:"登陆类型:verify(验证码方式)/account(账密)"`
 	Mobile string `form:"mobile"  json:"mobile" binding:"omitempty,min=1,max=11" label:"手机号码"`
@@ -17,12 +20,11 @@ type ParamLogin struct {
 	PassWord string `form:"password"  json:"password" binding:"omitempty,min=1" label:"密码"`
 }
 type ParamUserRegister struct {
-	ParamUserCnName
-	ParamUserEnName
-	ParamUserEmail
-	//EmployeeNum string `form:"employee_num"  json:"employee_num" binding:"required,min=1" label:"工号"`
-	ParamMobile
-	ParamPassword
+	CnName string `form:"cn_name"  json:"cn_name" binding:"required,min=1,max=10" label:"中文名称"`
+	Email string `form:"email"  json:"email" binding:"required,min=1" label:"邮箱"`
+	EnName string `form:"en_name"  json:"en_name" binding:"required,min=1,max=10" label:"英文名称"`
+	PassWord string `form:"password"  json:"password" binding:"required,min=1" label:"密码"`
+	Mobile string `form:"mobile"  json:"mobile" binding:"omitempty,min=1,max=11" label:"手机号码"`
 }
 type ParamUserCnName struct {
 	CnName string `form:"cn_name"  json:"cn_name" binding:"required,min=1,max=10" label:"中文名称"`
