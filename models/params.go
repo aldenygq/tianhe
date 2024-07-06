@@ -20,14 +20,10 @@ type ParamLogin struct {
 	PassWord string `form:"password"  json:"password" binding:"omitempty,min=1" label:"密码"`
 }
 type ParamUserRegister struct {
-	CnName string `form:"cn_name"  json:"cn_name" binding:"required,min=1,max=10" label:"中文名称"`
 	Email string `form:"email"  json:"email" binding:"required,min=1" label:"邮箱"`
 	EnName string `form:"en_name"  json:"en_name" binding:"required,min=1,max=10" label:"英文名称"`
 	PassWord string `form:"password"  json:"password" binding:"required,min=1" label:"密码"`
 	Mobile string `form:"mobile"  json:"mobile" binding:"omitempty,min=1,max=11" label:"手机号码"`
-}
-type ParamUserCnName struct {
-	CnName string `form:"cn_name"  json:"cn_name" binding:"required,min=1,max=10" label:"中文名称"`
 }
 type ParamUserEmail struct {
 	Email string `form:"email"  json:"email" binding:"required,min=1" label:"邮箱"`
@@ -40,7 +36,6 @@ type ParamModifyUserStatus struct {
 	ParamUserStatus
 }
 type ParamModifyUserInfo struct {
-	ParamUserCnName
 	ParamUserEnName
 	ParamUserEmail
 	ParamMobile
@@ -52,7 +47,6 @@ type ParamForgotPassword struct {
 
 type ParamUserList struct {
 	EnName string `form:"en_name"  json:"en_name" binding:"omitempty,min=1,max=10" label:"英文名称"`
-	CnName string `form:"cn_name"  json:"cn_name" binding:"omitempty,min=1,max=10" label:"中文名称"`
 	Mobile string `form:"mobile"  json:"mobile" binding:"omitempty,min=1,max=11" label:"手机号码"`
 	Status int64 `form:"status"  json:"status" binding:"omitempty,gt=0" label:"状态"`
 }

@@ -74,7 +74,6 @@ type Users struct {
 	Email    string `gorm:"column:email;type:int(11)" json:"email" description:"邮箱"`
 	Id       int64  `gorm:"column:id;PRIMARY_KEY;type:int(10)" json:"id"  description:"用户主键id"`
 	Mtime    int64  `gorm:"column:mtime;type:int(11)" json:"mtime" description:"修改时间"`
-	CnName   string `gorm:"column:cn_name;type:varchar(256)" json:"cname" description:"用户中文名"`
 	EnName   string `gorm:"column:en_name;type:varchar(256)" json:"en_name" description:"用户英文名"`
 	Password string `gorm:"column:password;type:varchar(256)" json:"password" description:"用户密码"`
 	Mobile   string `gorm:"column:mobile;type:varchar(16)" json:"mobile" description:"手机号"`
@@ -223,8 +222,6 @@ func (u *Users) List() (int64, []*Users, error) {
 		tx = tx.Where("email  = ?", u.Email)
 	case u.Status > 0 && u.Status != 3:
 		tx = tx.Where("status = ?", u.Status)
-	case u.CnName != "":
-		tx = tx.Where("cn_name like ?", "%"+u.CnName+"%")
 	default:
 		return count, nil, errors.New("filed invalid")
 	}

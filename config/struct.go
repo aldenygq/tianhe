@@ -26,8 +26,12 @@ type UtilInfo struct {
 }
 type LogConfig struct {
 	Loglevel  string        `yaml:"loglevel"`
-	Logfile   string        `yaml:"logfile"`
+	Logfile   LogFileInfo        `yaml:"logfile"`
 	Logmaxage time.Duration `yaml:"logmaxage"`
+}
+type LogFileInfo struct {
+	Api string `yaml:api`
+	Bus string `yaml:bus`
 }
 type DataBase struct {
 	Host            string `yaml:"host"`
@@ -48,10 +52,12 @@ type ServerInfo struct {
 	Mode string `yaml:"mode"`
 	Ssl SslInfo `yaml:"ssl"`
 }
+
 type SslInfo struct {
 	Key string `json:"key"`
 	Pem string `json:"pem"`
 }
+
 
 type RedisInfo struct {
 	Ip   string `yaml:"ip"`

@@ -81,7 +81,7 @@ func InitMysql() {
 	Sql.DB().SetMaxOpenConns(config.Conf.Mysql.MaxOpenConns)
 	//连接超时
 	Sql.DB().SetConnMaxLifetime(time.Second * time.Duration(config.Conf.Mysql.MaxConnLifeTime))
-	Sql.SetLogger(Logger)
+	Sql.SetLogger(busLogger)
 	// 表明禁用后缀加s
 	Sql.SingularTable(true)
 	

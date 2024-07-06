@@ -13,7 +13,9 @@ mysql:
 log:
   loglevel: info
   logmaxage: 7
-  logfile: ./tianhe.log
+  logfile: 
+    api: ./api.log
+    bus: ./tianhe.log
 
 server:
   ishttps: false

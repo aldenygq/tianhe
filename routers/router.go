@@ -1,6 +1,7 @@
 package router
 
 import (
+	//"fmt"
 	"tianhe/config"
 	"tianhe/middleware"
 
@@ -16,11 +17,11 @@ const (
 
 func InitRouter() *gin.Engine {
 	gin.SetMode(config.Conf.Server.Mode)
-	r := gin.New()
-
+	r := gin.Default()
+	r.Use(middleware.RequestId())
+	r.Use(middleware.Log())
 	//初始化参数校验
 	if err := middleware.TransInit("zh"); err != nil {
-		middleware.Logger.Errorf("init trans failed:%v", err)
 		return nil
 	}
 
@@ -44,6 +45,8 @@ func InitRegisterRoute(r *gin.Engine) *gin.RouterGroup {
 	auth := g.Group("/auth")
 	registerLoginRouter(auth)
 
+	host := g.Group("host")
+	registerHostRouter(host)
 	//key := g.Group("/key")
 	//registerKeyRouter(key)
 	// 404处理

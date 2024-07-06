@@ -76,6 +76,13 @@ func registerKeyRouter(key *gin.RouterGroup) {
 	}
 }
 */
+func registerHostRouter(host *gin.RouterGroup) {
+	h := host.Group("/v1")
+	{
+		//主机登录
+		h.POST("/", app.Login)
+	}
+}
 //健康检测
 func registerHealthRouter(health *gin.RouterGroup) {
 	health.GET("/status", func(c *gin.Context) {

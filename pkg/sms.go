@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"os"
 	"time"
-	
+	"errors"
 	"github.com/aldenygq/toolkits"
 	"tianhe/config"
 	"tianhe/middleware"
@@ -17,23 +17,24 @@ const (
 	SMSTPL = "【%v】您的验证码为：%v，若非本人操作,请忽略该短信！"
 )
 
-func SmsCheck(key, code string) bool {
+func SmsCheck(key, code string) (bool,error) {
 	val,err := middleware.RedisClient.Get(key).Result()
 	// 用完后将连接放回连接池
 	//defer middleware.RedisClient.Close()
-	if err != nil || val != code {
-		middleware.Logger.Errorf("get sms code by phone:%v failed:%v",key,err)
-		return false
+	if err != nil {
+		//middleware.Logger.Errorf("get sms code by phone:%v failed:%v",key,err)
+		return false,err 
 	}
-
-	return true
+	if val != code {
+		return false,errors.New("sms code not match")
+	}
+	return true,nil 
 }
 func SmsSet(key, val string,t int64) error {
 	//key = cache.RedisSuf + key
 	// 从池里获取连接
 	err := middleware.RedisClient.Set(key,val,60 * time.Second).Err()
 	if err != nil {
-		middleware.Logger.Errorf("set key to redis failed:%v\n",err)
 		return err
 	}
 	// 用完后将连接放回连接池
@@ -62,13 +63,11 @@ func SendSms(mobile, msg string) error {
 	if AClient != nil {
 		err = AClient.SendSms(mobile,ASignName,ATplnum,msg)
 		if err != nil {
-			middleware.Logger.Errorf("send sms by aliyun sms failed:%v\n",err)
 			return err
 		}
 	}else if TClient != nil {
 		err = TClient.TencentSendSmsCode(Appid,TSignName,TTplnum,mobile,msg)
 		if err != nil {
-			middleware.Logger.Errorf("send sms by tencent sms failed:%v\n",err)
 			return err
 		}
 	}

@@ -19,9 +19,9 @@ import (
 func (c *Context) Validate(p interface{}) error {
 	// 参数绑定
 	if err := c.Ctx.ShouldBindWith(p, binding.Query); err != nil {
-		Logger.Error("param bind error:", err)
+		LogErrorf(c.Ctx,fmt.Sprintf("param bind error:", err))
 		errs, _ := err.(validator.ValidationErrors)
-		c.Response(1001, removeTopStruct(errs.Translate(trans)), nil)
+		c.Response(1001, removeTopStruct(c,errs.Translate(trans)), nil)
 		return err
 	}
 
@@ -32,9 +32,9 @@ func (c *Context) Validate(p interface{}) error {
 func (c *Context) ValidateJson(p interface{}) error {
 	// 参数绑定
 	if err := c.Ctx.ShouldBindWith(p, binding.JSON); err != nil {
-		Logger.Error("param bind error:", err)
+		LogErrorf(c.Ctx,fmt.Sprintf("param bind error:", err))
 		errs, _ := err.(validator.ValidationErrors)
-		c.Response(1001, removeTopStruct(errs.Translate(trans)), nil)
+		c.Response(1001, removeTopStruct(c,errs.Translate(trans)), nil)
 		return err
 	}
 
@@ -45,9 +45,9 @@ func (c *Context) ValidateJson(p interface{}) error {
 func (c *Context) ValidateHeader(p interface{}) error {
 	// 参数绑定
 	if err := c.Ctx.ShouldBindWith(p, binding.Header); err != nil {
-		Logger.Error("param bind error:", err)
+		LogErrorf(c.Ctx,fmt.Sprintf("param bind error:", err))
 		errs, _ := err.(validator.ValidationErrors)
-		c.Response(1001, removeTopStruct(errs.Translate(trans)), nil)
+		c.Response(1001, removeTopStruct(c,errs.Translate(trans)), nil)
 		return err
 	}
 
@@ -57,7 +57,7 @@ func (c *Context) ValidateHeader(p interface{}) error {
 // ShouldBindUri
 func (c *Context) ValidateRouter(p interface{}) error {
 	if err := c.Ctx.ShouldBindUri(p); err != nil {
-		Logger.Error("param ShouldBindUri err:", err)
+		LogErrorf(c.Ctx,fmt.Sprintf("param bind error:", err))
 		c.Response(1001, err.Error(), nil)
 		return err
 	}
@@ -126,7 +126,7 @@ func TransInit(local string) (err error) {
 }
 
 //func removeTopStruct(fields map[string]string) map[string]string {
-func removeTopStruct(fields map[string]string) string {
+func removeTopStruct(c *Context,fields map[string]string) string {
 	res := map[string]string{}
 	for field, err := range fields {
 		res[field[strings.Index(field, ".")+1:]] = err
@@ -137,7 +137,7 @@ func removeTopStruct(fields map[string]string) string {
 		resp = append(resp, value)
 	}
 	data, _ := json.Marshal(res)
-	Logger.Info("data:", string(data))
+	LogInfof(c.Ctx,fmt.Sprintf("data:", string(data)))
 	response := strings.Join(resp, ",")
 	return response
 }

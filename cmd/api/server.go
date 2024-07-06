@@ -70,7 +70,7 @@ func run() error {
 	defer func() {
 		err := middleware.Sql.Close()
 		if err != nil {
-			middleware.Logger.Errorf("close mysql connection failed:%v",err)
+			log.Printf("close mysql connection failed:%v",err)
 		}
 	}()
 	
