@@ -1,15 +1,10 @@
 package middleware
 
 import (
-	//"encoding/base64"
 	"fmt"
 	"net/http"
-	//"oncall/middleware"
 
-	//"net/url"
-	//"strconv"
 	"time"
-	//"oncall/models"
 	"github.com/gin-gonic/gin"
 )
 

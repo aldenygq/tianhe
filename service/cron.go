@@ -4,8 +4,8 @@ import (
 	"os"
 	
 	"github.com/robfig/cron/v3"
-	"oncall/middleware"
-	"oncall/models"
+	"tianhe/middleware"
+	"tianhe/models"
 )
 var Cron *cron.Cron
 func InitCron() {

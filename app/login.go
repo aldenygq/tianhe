@@ -3,11 +3,11 @@ package app
 import (
 	"fmt"
 
-	"oncall/middleware"
-	"oncall/models"
-	"oncall/service"
+	"tianhe/middleware"
+	"tianhe/models"
+	"tianhe/service"
 
-	//"github.com/aldenygq/toolkits"
+	"github.com/aldenygq/toolkits"
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,26 +32,6 @@ func CheckUseLoginByUname(c *gin.Context) {
 	return
 }
 
-// 校验用户登录状态(token)
-func CheckUseLoginByUname(c *gin.Context) {
-	ctx := middleware.Context{Ctx: c}
-	var param models.ParamUserEnName
-	err := ctx.Validate(&param)
-	if err != nil {
-		middleware.Logger.Error("request param invalid")
-		return
-	}
-
-	token, msg, err := service.CheckUseLoginByUname(param)
-	if err != nil {
-		middleware.Logger.Errorf("check user %v login status failed:%v\n",param.EnName,err)
-		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
-		return
-	}
-
-	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, token)
-	return
-}
 
 // 登出
 func Logout(c *gin.Context) {
@@ -105,12 +85,12 @@ func Login(c *gin.Context) {
 }
 
 // 发送短信
-/*
+
 func SendSms(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	//参数校验
 	var param models.ParamMobile
-	err := ctx.ValidateJson(param)
+	err := ctx.ValidateJson(&param)
 	if err != nil {
 		middleware.Logger.Error("request param invalid")
 		return
@@ -121,7 +101,7 @@ func SendSms(c *gin.Context) {
 		ctx.Response(middleware.HTTP_MOBILE_INVALID, fmt.Sprintf("手机号不合法"), "")
 		return
 	}
-	msg, err := service.SendSms(param.Mobile)
+	msg, err := service.SendSms(param)
 	if err != nil {
 		middleware.Logger.Errorf("send sms to mobile %v failed:%v\n", param.Mobile, err)
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
@@ -130,4 +110,4 @@ func SendSms(c *gin.Context) {
 	ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 	return
 }
-*/
+

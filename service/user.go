@@ -3,10 +3,10 @@ package service
 import (
 	"errors"
 	"fmt"
-	"oncall/config"
-	"oncall/middleware"
-	"oncall/models"
-	"oncall/pkg"
+	"tianhe/config"
+	"tianhe/middleware"
+	"tianhe/models"
+	"tianhe/pkg"
 	"time"
 
 	"github.com/aldenygq/toolkits"

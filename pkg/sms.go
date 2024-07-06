@@ -9,8 +9,8 @@ import (
 	"time"
 	
 	"github.com/aldenygq/toolkits"
-	"oncall/config"
-	"oncall/middleware"
+	"tianhe/config"
+	"tianhe/middleware"
 )
 
 const (
@@ -20,8 +20,9 @@ const (
 func SmsCheck(key, code string) bool {
 	val,err := middleware.RedisClient.Get(key).Result()
 	// 用完后将连接放回连接池
-	defer middleware.RedisClient.Close()
+	//defer middleware.RedisClient.Close()
 	if err != nil || val != code {
+		middleware.Logger.Errorf("get sms code by phone:%v failed:%v",key,err)
 		return false
 	}
 
@@ -36,7 +37,7 @@ func SmsSet(key, val string,t int64) error {
 		return err
 	}
 	// 用完后将连接放回连接池
-	defer middleware.RedisClient.Close()
+	//defer middleware.RedisClient.Close()
 
 	return nil
 }

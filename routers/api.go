@@ -2,8 +2,8 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"oncall/app"
-	"oncall/middleware"
+	"tianhe/app"
+	"tianhe/middleware"
 )
 /*
 func registerOncallRouter(oncall *gin.RouterGroup) {
@@ -31,8 +31,6 @@ func registerUserRouter(user *gin.RouterGroup) {
 		u.POST("/register", app.UserRegister)
 		//忘记密码
 		u.POST("/forgotPassword", app.ForgotPassword)
-		//发送密码
-		//u.POST("/sendsms", app.SendSms)
 
 		u.Use(middleware.Auth())
 		//用户信息(需要认证)
@@ -60,7 +58,8 @@ func registerLoginRouter(auth *gin.RouterGroup) {
 		a.POST("/login", app.Login)
 		//查询用户登陆状态
 		a.GET("/checkuserLoginByUname", app.CheckUseLoginByUname)
-		a.GET("/checkuserLoginByToken", app.CheckUseLoginByToken)
+		//发送验证码
+		a.POST("/sendsms", app.SendSms)
 		a.Use(middleware.Auth())
 		//登出
 		a.POST("/logout", app.Logout)

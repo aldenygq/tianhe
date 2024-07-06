@@ -6,11 +6,10 @@ import (
 
 	"github.com/aldenygq/toolkits"
 	"github.com/gin-gonic/gin"
-	"oncall/middleware"
-	"oncall/models"
-	"oncall/pkg"
-	//"oncall/databases"
-	"oncall/config"
+	"tianhe/middleware"
+	"tianhe/models"
+	"tianhe/pkg"
+	"tianhe/config"
 )
 
 var rClient = middleware.RedisClient

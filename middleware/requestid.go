@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	//"github.com/nacos-group/nacos-sdk-go/inner/uuid"
 	"github.com/satori/go.uuid"
 )
 

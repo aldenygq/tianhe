@@ -4,10 +4,10 @@ import (
 	//"encoding/json"
 	"fmt"
 
-	"oncall/middleware"
-	"oncall/models"
-	"oncall/pkg"
-	"oncall/service"
+	"tianhe/middleware"
+	"tianhe/models"
+	"tianhe/pkg"
+	"tianhe/service"
 
 	"github.com/gin-gonic/gin"
 )

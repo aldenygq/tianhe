@@ -1,8 +1,8 @@
 package router
 
 import (
-	"oncall/config"
-	"oncall/middleware"
+	"tianhe/config"
+	"tianhe/middleware"
 
 	//"oncall/routers/testRouter"
 	"github.com/gin-gonic/gin"

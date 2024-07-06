@@ -13,7 +13,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	enTranslations "github.com/go-playground/validator/v10/translations/en"
 	chTranslations "github.com/go-playground/validator/v10/translations/zh"
-	//"gopkg.in/go-playground/validator.v10"
 )
 
 // ShouldBind

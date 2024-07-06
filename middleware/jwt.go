@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"fmt"
-	//"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"

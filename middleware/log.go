@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"bufio"
-	"oncall/config"
+	"tianhe/config"
 	//"oncall/tools"
 	"os"
 	"path"

@@ -10,13 +10,11 @@ import (
 	"syscall"
 	"time"
 	
-	"oncall/config"
-	//"oncall/pkg"
-	"oncall/middleware"
-	"oncall/routers"
-	//"oncall/service"
-	
-	//"oncall/tools"
+	"tianhe/config"
+	"tianhe/pkg"
+	"tianhe/middleware"
+	"tianhe/routers"
+
 	
 	"github.com/spf13/cobra"
 )
@@ -54,7 +52,7 @@ func setup() {
 	// 3. 初始化数据链接
 	middleware.InitDB()
 	//4、初始化sms客户端
-	//pkg.InitSms()
+	pkg.InitSms()
 	// 4. http客户端初始化
 	//httpclient.Init()
 	// 5. 启动异步任务队列

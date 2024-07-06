@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 	
-	"oncall/middleware"
-	"oncall/models"
+	"tianhe/middleware"
+	"tianhe/models"
 )
 //默认信息
 func DefaultInfo(param models.ParamDefaultInfo) (map[string]interface{},string,error) {

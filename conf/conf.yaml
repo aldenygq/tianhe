@@ -13,7 +13,7 @@ mysql:
 log:
   loglevel: info
   logmaxage: 7
-  logfile: ./oncall.log
+  logfile: ./tianhe.log
 
 server:
   ishttps: false
