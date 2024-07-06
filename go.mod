@@ -14,7 +14,6 @@ require (
 	github.com/jinzhu/gorm v1.9.16
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
-	github.com/robfig/cron/v3 v3.0.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1

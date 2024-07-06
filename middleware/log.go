@@ -28,10 +28,8 @@ const (
 	TIME_FORMAT    = "2006-01-02 15:04:05"
 )
 
-func InitLog() {
+func InitApiLog() gin.HandlerFunc {
 	apiLogger = logrus.New()
-	busLogger = logrus.New()
-
 	logFilePath := LOG_PATH
 	if !toolkits.IsDir(logFilePath) {
 		if !toolkits.CreateDir(logFilePath) {
@@ -40,59 +38,29 @@ func InitLog() {
 		}
 	}
 	apilogFileName := config.Conf.Log.Logfile.Api
-	buslogFileName := config.Conf.Log.Logfile.Bus
-	// 日志文件
 	apifileName := path.Join(logFilePath, apilogFileName)
-	busfileName := path.Join(logFilePath, buslogFileName)
-	log.Printf("api file name:%v\n", apifileName)
-	log.Printf("bus file name:%v\n", buslogFileName)
-	//输出日志中添加文件名和方法信息
 	apiLogger.SetReportCaller(true)
-	busLogger.SetReportCaller(true)
-	// 写入文件
-	apifile, err := os.OpenFile(apifileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0777)
+	log.Printf("api log file:%v",apifileName)
+	apifile, err := os.OpenFile(apifileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Printf("write log file failed:%v\n", err)
 		os.Exit(-1)
 	}
-	busfile, err := os.OpenFile(busfileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0777)
-	if err != nil {
-		log.Printf("write log file failed:%v\n", err)
-		os.Exit(-1)
-	}
-	// 设置输出
 	apiLogger.SetOutput(bufio.NewWriter(apifile))
-	busLogger.SetOutput(bufio.NewWriter(busfile))
-
 	if config.Conf.Log.Loglevel == LOG_LEVEL_INFO {
 		// 设置日志级别
 		apiLogger.SetLevel(logrus.InfoLevel)
-		busLogger.SetLevel(logrus.InfoLevel)
 	} else {
 		apiLogger.SetLevel(logrus.DebugLevel)
-		busLogger.SetLevel(logrus.DebugLevel)
 	}
 
 	// 设置 rotatelogs
 	apilogWriter, _ := rotatelogs.New(
 		// 分割后的文件名称
-		apilogFileName+".%Y%m%d%H",
+		apifileName+".%Y%m%d%H",
 
 		// 生成软链，指向最新日志文件Loglevel
-		rotatelogs.WithLinkName(apilogFileName),
-
-		// 设置最大保存时间(7天)
-		rotatelogs.WithMaxAge(config.Conf.Log.Logmaxage*24*time.Hour),
-
-		// 设置日志切割时间间隔(1小时)
-		rotatelogs.WithRotationTime(time.Hour),
-	)
-	buslogWriter, _ := rotatelogs.New(
-		// 分割后的文件名称
-		buslogFileName+".%Y%m%d%H",
-
-		// 生成软链，指向最新日志文件Loglevel
-		rotatelogs.WithLinkName(buslogFileName),
+		rotatelogs.WithLinkName(apifileName),
 
 		// 设置最大保存时间(7天)
 		rotatelogs.WithMaxAge(config.Conf.Log.Logmaxage*24*time.Hour),
@@ -109,16 +77,6 @@ func InitLog() {
 		logrus.ErrorLevel: apilogWriter,
 		logrus.PanicLevel: apilogWriter,
 	}
-
-	buswriteMap := lfshook.WriterMap{
-		logrus.InfoLevel:  buslogWriter,
-		logrus.FatalLevel: buslogWriter,
-		logrus.DebugLevel: buslogWriter,
-		logrus.WarnLevel:  buslogWriter,
-		logrus.ErrorLevel: buslogWriter,
-		logrus.PanicLevel: buslogWriter,
-	}
-
 	apilfHook := lfshook.NewHook(apiwriteMap, &nested.Formatter{
 		HideKeys:        true,
 		NoFieldsColors:  false,
@@ -126,22 +84,8 @@ func InitLog() {
 		TrimMessages:    true,
 		TimestampFormat: TIME_FORMAT,
 	})
-	buslfHook := lfshook.NewHook(buswriteMap, &nested.Formatter{
-		HideKeys:        true,
-		NoFieldsColors:  false,
-		CallerFirst:     false,
-		TrimMessages:    true,
-		TimestampFormat: TIME_FORMAT,
-	})
-
 	// 新增 Hook
 	apiLogger.AddHook(apilfHook)
-	busLogger.AddHook(buslfHook)
-}
-
-
-
-func Log() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		uri := c.Request.RequestURI
 		//开始时间
@@ -170,7 +114,8 @@ func Log() gin.HandlerFunc {
 			}).Info()
 		} else {
 			now := time.Now().Format(TIME_FORMAT)
-			apiLogger.Infof("%s | %3d | %13v | %15s | %s  %s",
+			apiLogger.Infof("%s | %s | %3d | %13v | %15s | %s  %s",
+				requestId,
 				now,
 				statusCode,
 				latencyTime,
@@ -180,6 +125,71 @@ func Log() gin.HandlerFunc {
 			)
 		}
 	}
+}
+
+func InitLog() {
+	busLogger = logrus.New()
+
+	logFilePath := LOG_PATH
+	if !toolkits.IsDir(logFilePath) {
+		if !toolkits.CreateDir(logFilePath) {
+			log.Printf("create log dir fialed")
+			os.Exit(-1)
+		}
+	}
+	
+	buslogFileName := config.Conf.Log.Logfile.Bus
+	// 日志文件
+	busfileName := path.Join(logFilePath, buslogFileName)
+	log.Printf("bus file name:%v\n", buslogFileName)
+	//输出日志中添加文件名和方法信息
+	busLogger.SetReportCaller(true)
+	// 写入文件
+	busfile, err := os.OpenFile(busfileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Printf("write log file failed:%v\n", err)
+		os.Exit(-1)
+	}
+	// 设置输出
+	busLogger.SetOutput(bufio.NewWriter(busfile))
+
+	if config.Conf.Log.Loglevel == LOG_LEVEL_INFO {
+		// 设置日志级别
+		busLogger.SetLevel(logrus.InfoLevel)
+	} else {
+		busLogger.SetLevel(logrus.DebugLevel)
+	}
+	buslogWriter, _ := rotatelogs.New(
+		// 分割后的文件名称
+		busfileName+".%Y%m%d%H",
+
+		// 生成软链，指向最新日志文件Loglevel
+		rotatelogs.WithLinkName(busfileName),
+
+		// 设置最大保存时间(7天)
+		rotatelogs.WithMaxAge(config.Conf.Log.Logmaxage*24*time.Hour),
+
+		// 设置日志切割时间间隔(1小时)
+		rotatelogs.WithRotationTime(time.Hour),
+	)
+
+	buswriteMap := lfshook.WriterMap{
+		logrus.InfoLevel:  buslogWriter,
+		logrus.FatalLevel: buslogWriter,
+		logrus.DebugLevel: buslogWriter,
+		logrus.WarnLevel:  buslogWriter,
+		logrus.ErrorLevel: buslogWriter,
+		logrus.PanicLevel: buslogWriter,
+	}
+	buslfHook := lfshook.NewHook(buswriteMap, &nested.Formatter{
+		HideKeys:        true,
+		NoFieldsColors:  false,
+		CallerFirst:     false,
+		TrimMessages:    true,
+		TimestampFormat: TIME_FORMAT,
+	})
+
+	busLogger.AddHook(buslfHook)
 }
 
 func getRequestId(c *gin.Context) (value any) {

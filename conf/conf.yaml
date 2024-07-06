@@ -14,8 +14,8 @@ log:
   loglevel: info
   logmaxage: 7
   logfile: 
-    api: ./api.log
-    bus: ./tianhe.log
+    api: api.log
+    bus: tianhe.log
 
 server:
   ishttps: false

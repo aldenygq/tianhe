@@ -19,7 +19,7 @@ func InitRouter() *gin.Engine {
 	gin.SetMode(config.Conf.Server.Mode)
 	r := gin.Default()
 	r.Use(middleware.RequestId())
-	r.Use(middleware.Log())
+	r.Use(middleware.InitApiLog())
 	//初始化参数校验
 	if err := middleware.TransInit("zh"); err != nil {
 		return nil
