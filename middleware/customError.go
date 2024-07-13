@@ -47,3 +47,4 @@ func CustomError(c *gin.Context) {
 	}()
 	c.Next()
 }
+

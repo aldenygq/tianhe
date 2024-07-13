@@ -19,9 +19,9 @@ import (
 func (c *Context) Validate(p interface{}) error {
 	// 参数绑定
 	if err := c.Ctx.ShouldBindWith(p, binding.Query); err != nil {
-		LogErrorf(c.Ctx,fmt.Sprintf("param bind error:", err))
+		LogErr(c.Ctx).Errorf(fmt.Sprintf("param bind error:", err))
 		errs, _ := err.(validator.ValidationErrors)
-		c.Response(1001, removeTopStruct(c,errs.Translate(trans)), nil)
+		c.Response(1001, removeTopStruct(c,errs.Translate(trans)),nil)
 		return err
 	}
 
@@ -32,7 +32,7 @@ func (c *Context) Validate(p interface{}) error {
 func (c *Context) ValidateJson(p interface{}) error {
 	// 参数绑定
 	if err := c.Ctx.ShouldBindWith(p, binding.JSON); err != nil {
-		LogErrorf(c.Ctx,fmt.Sprintf("param bind error:", err))
+		LogErr(c.Ctx).Errorf(fmt.Sprintf("param bind error:", err))
 		errs, _ := err.(validator.ValidationErrors)
 		c.Response(1001, removeTopStruct(c,errs.Translate(trans)), nil)
 		return err
@@ -45,7 +45,7 @@ func (c *Context) ValidateJson(p interface{}) error {
 func (c *Context) ValidateHeader(p interface{}) error {
 	// 参数绑定
 	if err := c.Ctx.ShouldBindWith(p, binding.Header); err != nil {
-		LogErrorf(c.Ctx,fmt.Sprintf("param bind error:", err))
+		LogErr(c.Ctx).Errorf(fmt.Sprintf("param bind error:", err))
 		errs, _ := err.(validator.ValidationErrors)
 		c.Response(1001, removeTopStruct(c,errs.Translate(trans)), nil)
 		return err
@@ -57,8 +57,8 @@ func (c *Context) ValidateHeader(p interface{}) error {
 // ShouldBindUri
 func (c *Context) ValidateRouter(p interface{}) error {
 	if err := c.Ctx.ShouldBindUri(p); err != nil {
-		LogErrorf(c.Ctx,fmt.Sprintf("param bind error:", err))
-		c.Response(1001, err.Error(), nil)
+		LogErr(c.Ctx).Errorf(fmt.Sprintf("param bind error:", err))
+		c.Response(1001, err.Error(),nil)
 		return err
 	}
 	return nil
@@ -137,7 +137,7 @@ func removeTopStruct(c *Context,fields map[string]string) string {
 		resp = append(resp, value)
 	}
 	data, _ := json.Marshal(res)
-	LogInfof(c.Ctx,fmt.Sprintf("data:", string(data)))
+	LogInfo(c.Ctx).Infof(fmt.Sprintf("data:", string(data)))
 	response := strings.Join(resp, ",")
 	return response
 }

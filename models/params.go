@@ -8,6 +8,23 @@ type ParamHeader struct {
 	Uname string `header:"User_En_Name" binding:"required,min=1" label:"请求header(用户英文名)"`
 }
  */
+
+ // host参数
+ type ParamAddHost struct {
+	HostName string `form:"host_name"  json:"host_name" binding:"required,min=0" label:"主机名"`
+	HostIp string `form:"host_ip"  json:"host_ip" binding:"required,min=0" label:"主机ip"`
+	// kvm/cloud/physical
+	HostType   string `form:"host_type" json:"host_type" binding:"required,min=0" label:"主机类型"`
+	//ssh连接端口，默认为 22
+	Port       string `form:"port" json:"port" binding:"omitempty,min=0" label:"ssh连接端口"`
+	AuthType   string `form:"auth_type" json:"auth_type" binding:"required,min=0" label:"登录认证类型"`
+	User       string `form:"user" json:"user" binding:"required,min=0" label:"登录用户"`
+	Password   string `form:"password" json:"password" binding:"required,min=0" label:"认证密码"`
+	OsVersion  string `form:"os_version" json:"os_version" binding:"required,min=0" label:"系统版本"`
+	PrivateKey string `form:"private_key" json:"private_key" binding:"required,min=0" label:"认证密钥"`
+	//Creator    string `form:"private_key" json:"private_key" binding:"required,min=0" label:"认证密钥"
+
+ }
  type ParamSetUserTokenExpire struct {
 	ExpireTime int64 `form:"expire_time"  json:"expire_time" binding:"omitempty,gt=0" label:"token 有效期"`
 }

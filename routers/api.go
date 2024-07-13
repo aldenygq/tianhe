@@ -58,6 +58,7 @@ func registerLoginRouter(auth *gin.RouterGroup) {
 		a.POST("/login", app.Login)
 		//查询用户登陆状态
 		a.GET("/checkuserLoginByUname", app.CheckUseLoginByUname)
+		
 		//发送验证码
 		a.POST("/sendsms", app.SendSms)
 		a.Use(middleware.Auth())
@@ -79,8 +80,8 @@ func registerKeyRouter(key *gin.RouterGroup) {
 func registerHostRouter(host *gin.RouterGroup) {
 	h := host.Group("/v1")
 	{
-		//主机登录
-		h.POST("/", app.Login)
+		//主机
+		h.POST("/addHost", app.AddHost)
 	}
 }
 //健康检测

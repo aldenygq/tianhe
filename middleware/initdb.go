@@ -81,12 +81,14 @@ func InitMysql() {
 	Sql.DB().SetMaxOpenConns(config.Conf.Mysql.MaxOpenConns)
 	//连接超时
 	Sql.DB().SetConnMaxLifetime(time.Second * time.Duration(config.Conf.Mysql.MaxConnLifeTime))
-	Sql.SetLogger(busLogger)
+	Sql.SetLogger(gormLogger)
 	// 表明禁用后缀加s
 	Sql.SingularTable(true)
 	
+	
 	log.Printf("init db success\n")
 }
+
 
 
 

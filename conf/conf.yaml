@@ -16,6 +16,7 @@ log:
   logfile: 
     api: api.log
     bus: tianhe.log
+    sql: sql.log
 
 server:
   ishttps: false
@@ -23,6 +24,7 @@ server:
   port: 8041
   #release(生产)/test(测试)
   mode: release
+  cpunum: 2
   ssl:
     key: keystring
     pem: temp/pem.pem
@@ -46,6 +48,11 @@ sms:
     tplnum: xxxxxxx
     region:
     appid:
+
+route:
+  # 是否启用casbin鉴权
+  enableCasbin: true
+  authTokenExpire: 600
+  qps: 10
 util:
  initkey: MazsiS0vKQ201MIy
- authTokenExpire: 600

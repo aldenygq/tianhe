@@ -11,64 +11,13 @@ import (
 	"fmt"
 )
 
-var db = middleware.Sql
+//var db = middleware.Sql
 
 const (
 	ONCALL_RULE       = "oncall_rule"
 	CURRENT_DUTY_INFO = "current_duty_info"
 	USERS             = "users"
-	USER_TOKEN_EXPIRE = "user_token_expire"
 )
-
-type UserTokenExpire struct {
-	Ctime    int64  `gorm:"column:ctime;type:int(11)" json:"ctime" description:"创建时间"`
-	Id       int64  `gorm:"column:id;PRIMARY_KEY;type:int(10)" json:"id"  description:"用户主键id"`
-	Mtime    int64  `gorm:"column:mtime;type:int(11)" json:"mtime" description:"修改时间"`
-	EnName   string `gorm:"column:en_name;type:varchar(256)" json:"en_name" description:"用户英文名"`
-	ExpireTime int64 `gorm:"column:expire_time;type:int(11)" json:"expire_time" description:"用户token有效时间"`
-}
-func (e *UserTokenExpire) Create() error{
-	tx := middleware.Sql.Begin()
-
-	err := tx.Table(USER_TOKEN_EXPIRE).Create(e).Error
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	err = tx.Commit().Error
-	if err != nil {
-		return err
-	}
-
-	return nil
-
-}
-func (e *UserTokenExpire) GetByUser() error {
-	err := middleware.Sql.Table(USERS).Where("en_name = ?",e.EnName).Take(&e).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return errors.New("record not found")
-	} else if err != nil {
-		return err
-	}
-	return nil 
-}
-func (e *UserTokenExpire) SetUserTokenExpire() error {
-	tx := middleware.Sql.Begin()
-
-	err := tx.Table(USER_TOKEN_EXPIRE).Where("en_name= ?", e.EnName).Update(&e).Error
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	err = tx.Commit().Error
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
 type Users struct {
 	Ctime    int64  `gorm:"column:ctime;type:int(11)" json:"ctime" description:"创建时间"`
 	Email    string `gorm:"column:email;type:int(11)" json:"email" description:"邮箱"`
@@ -78,6 +27,36 @@ type Users struct {
 	Password string `gorm:"column:password;type:varchar(256)" json:"password" description:"用户密码"`
 	Mobile   string `gorm:"column:mobile;type:varchar(16)" json:"mobile" description:"手机号"`
 	Status   int64  `gorm:"column:status;type:int(10)" json:"status" description:"用户状态，1(启用)/2(禁用)/3(删除)"`
+	CreateType string `gorm:"column:create_type;type:varchar(16)" json:"create_type" description:"创建方式:register/create"`
+	Creator string `gorm:"column:creator;type:varchar(256)" json:"creator" description:"创建人,注册为本人，他人创建需提供创建者"`
+	ExpireTime int64 `gorm:"column:expire_time;type:int(11)" json:"expire_time" description:"用户token有效时间"`
+}
+
+func (u *Users) GetTokenExpireByUser() error {
+	err := middleware.Sql.Table(USERS).Where("en_name = ?",u.EnName).Take(&u).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New("record not found")
+	} else if err != nil {
+		return err
+	}
+	return nil 
+}
+
+func (u *Users) SetUserTokenExpire() error {
+	tx := middleware.Sql.Begin()
+
+	err := tx.Table(USERS).Where("en_name= ?", u.EnName).Update(&u).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (u *Users) Create() error {
@@ -212,7 +191,7 @@ func (u *Users) List() (int64, []*Users, error) {
 		users []*Users = make([]*Users, 0)
 	)
 
-	tx := db.Begin().Table(USERS)
+	tx := middleware.Sql.Begin().Table(USERS)
 	switch {
 	case strings.TrimSpace(u.Mobile) != "":
 		tx = tx.Where("mobile  = ?", u.Mobile)
@@ -316,7 +295,7 @@ type OncallRule struct {
 }
 
 func (o *OncallRule) Create() error {
-	tx := db.Begin()
+	tx := middleware.Sql.Begin()
 
 	err := tx.Table(ONCALL_RULE).Create(&o).Error
 	if err != nil {
@@ -332,7 +311,7 @@ func (o *OncallRule) Create() error {
 	return nil
 }
 func (o *OncallRule) Modify() error {
-	tx := db.Begin()
+	tx := middleware.Sql.Begin()
 
 	err := tx.Table(ONCALL_RULE).Update(&o).Error
 	if err != nil {
@@ -349,7 +328,7 @@ func (o *OncallRule) Modify() error {
 }
 func (o *OncallRule) EnabledRule() ([]*OncallRule, error) {
 	var rules []*OncallRule = make([]*OncallRule, 0)
-	tx := db.Begin()
+	tx := middleware.Sql.Begin()
 
 	err := tx.Table(ONCALL_RULE).Where("status = ?", 1).Find(&rules).Error
 	if err != nil {
@@ -368,7 +347,7 @@ func (o *OncallRule) List() (int64, []*OncallRule, error) {
 		rules []*OncallRule = make([]*OncallRule, 0)
 	)
 
-	tx := db.Begin()
+	tx :=middleware.Sql.Begin()
 
 	err := tx.Table(ONCALL_RULE).Count(&total).Find(&rules).Error
 	if err != nil {
@@ -383,7 +362,7 @@ func (o *OncallRule) List() (int64, []*OncallRule, error) {
 }
 
 func (o *OncallRule) Get() error {
-	tx := db.Begin().Table(ONCALL_RULE)
+	tx := middleware.Sql.Begin().Table(ONCALL_RULE)
 	if o.Id > 0 {
 		tx = tx.Where("id = ?", o.Id)
 	}
@@ -415,7 +394,7 @@ type CurrentDutyInfo struct {
 }
 
 func (c *CurrentDutyInfo) Create() error {
-	tx := db.Begin()
+	tx := middleware.Sql.Begin()
 
 	err := tx.Table(CURRENT_DUTY_INFO).Create(&c).Error
 	if err != nil {
@@ -435,7 +414,7 @@ func (c *CurrentDutyInfo) List() ([]*CurrentDutyInfo, error) {
 		dutys []*CurrentDutyInfo = make([]*CurrentDutyInfo, 0)
 		err   error
 	)
-	tx := db.Begin().Table(CURRENT_DUTY_INFO)
+	tx := middleware.Sql.Begin().Table(CURRENT_DUTY_INFO)
 	if c.RuleId > 0 {
 		tx = tx.Where("rule_id = ?", c.RuleId)
 	}

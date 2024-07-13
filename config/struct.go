@@ -9,6 +9,12 @@ type Config struct {
 	Redis  *RedisInfo  `mapstructure:"redis"`
 	Server *ServerInfo `mapstructure:"server"`
 	Sms []*SmsInfo `mapstructure:"sms"`
+	Route *RouteInfo `mapstructure:"route"`
+}
+type RouteInfo struct {
+	EnabledCasbin bool `yaml:enable_casbin`
+	AuthTokenExpire int64 `yaml:"authTokenExpire"`
+	Qps int64 `yaml:qps`
 }
 type SmsInfo struct {
 	Type string `yaml:"type"`
@@ -22,7 +28,6 @@ type SmsInfo struct {
 }
 type UtilInfo struct {
 	InitKey  string `yaml:"initkey"`
-	AuthTokenExpire int64 `yaml:"authTokenExpire"`
 }
 type LogConfig struct {
 	Loglevel  string        `yaml:"loglevel"`
@@ -32,6 +37,7 @@ type LogConfig struct {
 type LogFileInfo struct {
 	Api string `yaml:api`
 	Bus string `yaml:bus`
+	Sql string `yaml:"sql"`
 }
 type DataBase struct {
 	Host            string `yaml:"host"`
@@ -47,6 +53,7 @@ type DataBase struct {
 }
 type ServerInfo struct {
 	IsHttps bool `yaml:"ishttps"`
+	CpuNum int `yaml:"cpunum"`
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
 	Mode string `yaml:"mode"`

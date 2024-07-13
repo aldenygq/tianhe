@@ -44,11 +44,11 @@ func DelToken(uname string ) error {
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		LogInfof(c,fmt.Sprintf("access token:%v\n",ACCESS_TOKEN))
+		LogInfo(c).Infof(fmt.Sprintf("access token:%v\n",ACCESS_TOKEN))
 		auth := c.Request.Header.Get(ACCESS_TOKEN)
 		if len(auth) == 0 {
 			c.Abort()
-			LogErrorf(c,fmt.Sprintf("token %v invalid\n",auth))
+			LogErr(c).Errorf(fmt.Sprintf("token %v invalid\n",auth))
 			c.JSON(200, gin.H{
 				"errno":"401",
 				"errmsg": "token invalid",
@@ -59,7 +59,7 @@ func Auth() gin.HandlerFunc {
 		ret,err:= ParseToken(auth)
 		if err != nil {
 			c.Abort()
-			LogErrorf(c,fmt.Sprintf("user login info expired:%v",err))
+			LogErr(c).Errorf(fmt.Sprintf("user login info expired:%v",err))
 			c.JSON(200, gin.H{
 				"errno":"401",
 				"errmsg": "user login info expired",
@@ -67,12 +67,12 @@ func Auth() gin.HandlerFunc {
 			})
 			return 
 		}
-		LogInfof(c,fmt.Sprintf("user name:%v",ret.UEnName))
+		LogInfo(c).Infof(fmt.Sprintf("user name:%v",ret.UEnName))
 		val,err := RedisClient.Get(ret.UEnName).Result()
-		LogInfof(c,fmt.Sprintf("val:%v",val))
+		LogInfo(c).Infof(fmt.Sprintf("val:%v",val))
 		if err != nil || val != auth{
 			c.Abort()
-			LogErrorf(c,fmt.Sprintf("user %v not login",ret.UEnName))
+			LogErr(c).Errorf(fmt.Sprintf("user %v not login",ret.UEnName))
 			c.JSON(200, gin.H{
 				"errno":"401",
 				"errmsg": "user login info expired",
@@ -88,21 +88,20 @@ func DoLogin(c *gin.Context,enname string,expire int64) (string,error) {
 	customClaims :=&CustomClaims{
 		UEnName:         enname,
 		StandardClaims: jwt.StandardClaims{
-			//ExpiresAt: time.Now().Add(time.Duration(MAXAGE)*time.Second).Unix(), // 过期时间，必须设置
 			ExpiresAt: time.Now().Add(time.Duration(expire)*time.Second).Unix(), // 过期时间，必须设置
 			Issuer:    "alden",
 		},
 	}
 	accessToken, err :=customClaims.MakeToken()
 	if err != nil {
-		LogErrorf(c,fmt.Sprintf("create access token failed:%v",err))
+		LogErr(c).Errorf(fmt.Sprintf("create access token failed:%v",err))
 		return "",err
 	}
 	
 	//存储登陆状态
 	err = RedisClient.Set(enname,accessToken,time.Duration(expire)*time.Second).Err()
 	if err != nil {
-		LogErrorf(c,fmt.Sprintf("save access token to redis failed:%v",accessToken))
+		LogErr(c).Errorf(fmt.Sprintf("save access token to redis failed:%v",accessToken))
 		return "",err
 	}
 	

@@ -7,15 +7,16 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
-	
+
 	"tianhe/config"
-	"tianhe/pkg"
 	"tianhe/middleware"
+	"tianhe/pkg"
 	"tianhe/routers"
 
-	
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 )
 
@@ -47,6 +48,8 @@ func usage() {
 func setup() {
 	// 1. 读取配置
 	config.InitConfig()
+	// 2. 设置 CPU 核数
+	runtime.GOMAXPROCS(config.Conf.Server.CpuNum)
 	// 2.初始化log
 	middleware.InitLog()
 	// 3. 初始化数据链接
@@ -70,7 +73,7 @@ func run() error {
 	defer func() {
 		err := middleware.Sql.Close()
 		if err != nil {
-			log.Printf("close mysql connection failed:%v",err)
+			middleware.LogErr(&gin.Context{}).Errorf("close mysql connection failed:%v",err)
 		}
 	}()
 	
@@ -85,26 +88,14 @@ func run() error {
 		// 服务连接
 		if config.Conf.Server.IsHttps {
 			if err := srv.ListenAndServeTLS(config.Conf.Server.Ssl.Pem, config.Conf.Server.Ssl.Key); err != nil && err != http.ErrServerClosed {
-				log.Printf("listen: %s\n", err)
+				middleware.LogInfo(&gin.Context{}).Infof("listen: %s", err)
 			}
 		} else {
 			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				log.Printf("listen: %s\n", err)
+				middleware.LogInfo(&gin.Context{}).Infof("listen: %s", err)
 			}
 		}
 	}()
-	/*
-	log.Printf("%s Server Run http://%s:%s/ \r\n",
-		tools.GetCurrntTimeStr(),
-		config.Conf.Server.Host,
-		config.Conf.Server.Port)
-	
-	log.Printf("%s Swagger URL http://%s:%s/swagger/index.html \r\n",
-		tools.GetCurrntTimeStr(),
-		config.Conf.Server.Host,
-		config.Conf.Server.Port)
-	log.Printf("%s Enter Control + C Shutdown Server \r\n", tools.GetCurrntTimeStr())
-	*/
 	
 	// 等待中断信号以优雅地关闭服务器（设置 5 秒的超时时间）
 	quit := make(chan os.Signal)
@@ -115,9 +106,9 @@ func run() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Printf("Server Shutdown:", err)
+		middleware.LogErr(&gin.Context{}).Errorf("Server Shutdown:", err)
 	}
-	log.Printf("Server exiting")
+	middleware.LogInfo(&gin.Context{}).Infof("Server exiting")
 	return nil
 }
 

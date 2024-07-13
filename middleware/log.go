@@ -19,6 +19,7 @@ import (
 var (
 	apiLogger *logrus.Logger
 	busLogger *logrus.Logger
+	gormLogger *logrus.Logger
 )
 
 
@@ -28,8 +29,7 @@ const (
 	TIME_FORMAT    = "2006-01-02 15:04:05"
 )
 
-func InitApiLog() gin.HandlerFunc {
-	apiLogger = logrus.New()
+func initLog(logger *logrus.Logger,filepath string) *lfshook.LfsHook{
 	logFilePath := LOG_PATH
 	if !toolkits.IsDir(logFilePath) {
 		if !toolkits.CreateDir(logFilePath) {
@@ -37,30 +37,27 @@ func InitApiLog() gin.HandlerFunc {
 			os.Exit(-1)
 		}
 	}
-	apilogFileName := config.Conf.Log.Logfile.Api
-	apifileName := path.Join(logFilePath, apilogFileName)
-	apiLogger.SetReportCaller(true)
-	log.Printf("api log file:%v",apifileName)
-	apifile, err := os.OpenFile(apifileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+	fileName := path.Join(logFilePath, filepath)
+	logger.SetReportCaller(true)
+	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Printf("write log file failed:%v\n", err)
 		os.Exit(-1)
-	}
-	apiLogger.SetOutput(bufio.NewWriter(apifile))
+	}	
+	logger.SetOutput(bufio.NewWriter(file))
 	if config.Conf.Log.Loglevel == LOG_LEVEL_INFO {
 		// 设置日志级别
-		apiLogger.SetLevel(logrus.InfoLevel)
+		logger.SetLevel(logrus.InfoLevel)
 	} else {
-		apiLogger.SetLevel(logrus.DebugLevel)
+		logger.SetLevel(logrus.DebugLevel)
 	}
-
-	// 设置 rotatelogs
-	apilogWriter, _ := rotatelogs.New(
+		// 设置 rotatelogs
+	logWriter, _ := rotatelogs.New(
 		// 分割后的文件名称
-		apifileName+".%Y%m%d%H",
+		fileName+".%Y%m%d%H",
 
 		// 生成软链，指向最新日志文件Loglevel
-		rotatelogs.WithLinkName(apifileName),
+		rotatelogs.WithLinkName(fileName),
 
 		// 设置最大保存时间(7天)
 		rotatelogs.WithMaxAge(config.Conf.Log.Logmaxage*24*time.Hour),
@@ -68,24 +65,31 @@ func InitApiLog() gin.HandlerFunc {
 		// 设置日志切割时间间隔(1小时)
 		rotatelogs.WithRotationTime(time.Hour),
 	)
-
-	apiwriteMap := lfshook.WriterMap{
-		logrus.InfoLevel:  apilogWriter,
-		logrus.FatalLevel: apilogWriter,
-		logrus.DebugLevel: apilogWriter,
-		logrus.WarnLevel:  apilogWriter,
-		logrus.ErrorLevel: apilogWriter,
-		logrus.PanicLevel: apilogWriter,
+	logwriteMap := lfshook.WriterMap{
+		logrus.InfoLevel:  logWriter,
+		logrus.FatalLevel: logWriter,
+		logrus.DebugLevel: logWriter,
+		logrus.WarnLevel:  logWriter,
+		logrus.ErrorLevel: logWriter,
+		logrus.PanicLevel: logWriter,
 	}
-	apilfHook := lfshook.NewHook(apiwriteMap, &nested.Formatter{
+	lfHook := lfshook.NewHook(logwriteMap, &nested.Formatter{
 		HideKeys:        true,
 		NoFieldsColors:  false,
 		CallerFirst:     false,
 		TrimMessages:    true,
+		NoColors: false,
 		TimestampFormat: TIME_FORMAT,
 	})
+
+	return lfHook
+}
+
+func InitApiLog() gin.HandlerFunc {
+	apiLogger = logrus.New()
+	apiLogger.AddHook(initLog(apiLogger,config.Conf.Log.Logfile.Api))
 	// 新增 Hook
-	apiLogger.AddHook(apilfHook)
+	//apiLogger.AddHook(apilfHook)
 	return func(c *gin.Context) {
 		uri := c.Request.RequestURI
 		//开始时间
@@ -129,78 +133,17 @@ func InitApiLog() gin.HandlerFunc {
 
 func InitLog() {
 	busLogger = logrus.New()
-
-	logFilePath := LOG_PATH
-	if !toolkits.IsDir(logFilePath) {
-		if !toolkits.CreateDir(logFilePath) {
-			log.Printf("create log dir fialed")
-			os.Exit(-1)
-		}
-	}
-	
-	buslogFileName := config.Conf.Log.Logfile.Bus
-	// 日志文件
-	busfileName := path.Join(logFilePath, buslogFileName)
-	log.Printf("bus file name:%v\n", buslogFileName)
-	//输出日志中添加文件名和方法信息
-	busLogger.SetReportCaller(true)
-	// 写入文件
-	busfile, err := os.OpenFile(busfileName, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-	if err != nil {
-		log.Printf("write log file failed:%v\n", err)
-		os.Exit(-1)
-	}
-	// 设置输出
-	busLogger.SetOutput(bufio.NewWriter(busfile))
-
-	if config.Conf.Log.Loglevel == LOG_LEVEL_INFO {
-		// 设置日志级别
-		busLogger.SetLevel(logrus.InfoLevel)
-	} else {
-		busLogger.SetLevel(logrus.DebugLevel)
-	}
-	buslogWriter, _ := rotatelogs.New(
-		// 分割后的文件名称
-		busfileName+".%Y%m%d%H",
-
-		// 生成软链，指向最新日志文件Loglevel
-		rotatelogs.WithLinkName(busfileName),
-
-		// 设置最大保存时间(7天)
-		rotatelogs.WithMaxAge(config.Conf.Log.Logmaxage*24*time.Hour),
-
-		// 设置日志切割时间间隔(1小时)
-		rotatelogs.WithRotationTime(time.Hour),
-	)
-
-	buswriteMap := lfshook.WriterMap{
-		logrus.InfoLevel:  buslogWriter,
-		logrus.FatalLevel: buslogWriter,
-		logrus.DebugLevel: buslogWriter,
-		logrus.WarnLevel:  buslogWriter,
-		logrus.ErrorLevel: buslogWriter,
-		logrus.PanicLevel: buslogWriter,
-	}
-	buslfHook := lfshook.NewHook(buswriteMap, &nested.Formatter{
-		HideKeys:        true,
-		NoFieldsColors:  false,
-		CallerFirst:     false,
-		TrimMessages:    true,
-		TimestampFormat: TIME_FORMAT,
-	})
-
-	busLogger.AddHook(buslfHook)
+	busLogger.AddHook(initLog(busLogger,config.Conf.Log.Logfile.Bus))
 }
-
-func getRequestId(c *gin.Context) (value any) {
-	requestid,_ := c.Get("X-Request-Id")
-	return requestid
+func InitDbLog() {
+	gormLogger = logrus.New()
+	gormLogger.AddHook(initLog(gormLogger,config.Conf.Log.Logfile.Sql))
 }
  
-func  LogInfof(c *gin.Context,msg string) {
-	busLogger.WithField("request_id",getRequestId(c)).Infof(msg)
+func LogInfo(c *gin.Context) *logrus.Entry {
+	return busLogger.WithField("request_id",GetRequestId(c))
 }
 
-func  LogErrorf(c *gin.Context,msg string) {
-	busLogger.WithField("request_id",getRequestId(c)).Errorf(msg)
+func  LogErr(c *gin.Context) *logrus.Entry {
+	return busLogger.WithField("request_id",GetRequestId(c))
 }

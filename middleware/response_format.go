@@ -26,6 +26,7 @@ type Context struct {
 type Response struct {
 	Errno  int         `json:"errno"`
 	Data   interface{} `json:"data"`
+	RequestId interface{} `json:"requestid"`
 	ErrMsg string      `json:"errmsg"`
 }
 
@@ -35,5 +36,6 @@ func (c *Context) Response(errno int, errmsg string, data interface{}) {
 		Errno:  errno,
 		Data:   data,
 		ErrMsg: errmsg,
+		RequestId: GetRequestId(c.Ctx),
 	})
 }

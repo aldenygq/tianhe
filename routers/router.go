@@ -1,11 +1,10 @@
 package router
 
 import (
-	//"fmt"
+	"net/http"
 	"tianhe/config"
 	"tianhe/middleware"
 
-	//"oncall/routers/testRouter"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,9 +16,16 @@ const (
 
 func InitRouter() *gin.Engine {
 	gin.SetMode(config.Conf.Server.Mode)
-	r := gin.Default()
+	r := gin.New()
 	r.Use(middleware.RequestId())
 	r.Use(middleware.InitApiLog())
+	r.Use(middleware.NoMethodHandler())
+	r.Use(gin.Recovery())
+	r.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusNotFound,gin.H{"msg":"The request uri not found"})
+	})
+	r.Use(middleware.LimitHandler())
+
 	//初始化参数校验
 	if err := middleware.TransInit("zh"); err != nil {
 		return nil
@@ -49,7 +55,5 @@ func InitRegisterRoute(r *gin.Engine) *gin.RouterGroup {
 	registerHostRouter(host)
 	//key := g.Group("/key")
 	//registerKeyRouter(key)
-	// 404处理
-	r.Use(middleware.NoRoute)
 	return g
 }
