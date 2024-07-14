@@ -30,30 +30,13 @@ func InitRouter() *gin.Engine {
 	if err := middleware.TransInit("zh"); err != nil {
 		return nil
 	}
-
-	InitRegisterRoute(r)
+	apiGroup := r.Group("/tianhe/v1")
+	{
+		registerUserRouter(apiGroup)
+		registerHealthRouter(apiGroup)
+		registerLoginRouter(apiGroup)
+		registerHostRouter(apiGroup)
+	}
 
 	return r
-}
-func InitRegisterRoute(r *gin.Engine) *gin.RouterGroup {
-	g := r.Group("/tianhe")
-
-	//值班规格管理
-	//oncall := g.Group("/oncall")
-	//registerOncallRouter(oncall)
-	//用户管理
-	user := g.Group("/user")
-	registerUserRouter(user)
-
-	health := g.Group("/checkhealth")
-	registerHealthRouter(health)
-
-	auth := g.Group("/auth")
-	registerLoginRouter(auth)
-
-	host := g.Group("host")
-	registerHostRouter(host)
-	//key := g.Group("/key")
-	//registerKeyRouter(key)
-	return g
 }

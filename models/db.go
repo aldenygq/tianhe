@@ -17,6 +17,8 @@ const (
 	ONCALL_RULE       = "oncall_rule"
 	CURRENT_DUTY_INFO = "current_duty_info"
 	USERS             = "users"
+	HOST = "host"
+	K8SCLUSTER = "k8s_cluster"
 )
 type Users struct {
 	Ctime    int64  `gorm:"column:ctime;type:int(11)" json:"ctime" description:"创建时间"`
@@ -83,27 +85,6 @@ func (u *Users) CheckuserStatus() error {
 
 	return nil
 }
-/*
-func (u *Users) IsDelete() (bool, error) {
-	tx, err := u.getRequirement()
-	if err != nil {
-		return true, err
-	}
-	err = tx.Where("status = 1").Take(&u).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		tx.Rollback()
-		return false, gorm.ErrRecordNotFound
-	} else if err != nil {
-		tx.Rollback()
-		return false, err
-	}
-	err = tx.Commit().Error
-	if err != nil {
-		return true, err
-	}
-	return true, nil
-}
-*/
 func (u *Users) CheckUserExistByMobile() (bool,error) {
 	err := middleware.Sql.Table(USERS).Where("mobile = ? and status != 3",u.Mobile).Take(&u).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -433,3 +414,163 @@ func (c *CurrentDutyInfo) List() ([]*CurrentDutyInfo, error) {
 
 	return nil, nil
 }
+
+
+
+
+type Host struct {
+	Ctime    int64  `gorm:"column:ctime;type:int(11)" json:"ctime" description:"创建时间"`
+	Id       int64  `gorm:"column:id;PRIMARY_KEY;type:int(10)" json:"id"  description:"主键id"`
+	HostId string `gorm:"column:host_id;type:varchar(64);unique" json:"host_id"  description:"主机id"`
+	Mtime    int64  `gorm:"column:mtime;type:int(11)" json:"mtime" description:"修改时间"`
+	HostName   string `gorm:"column:host_name;type:varchar(256);unique" json:"host_name" description:"主机名称"`
+	HostIp string `gorm:"column:host_ip;type:varchar(256);unique" json:"host_ip" description:"主机 ip"`
+	HostType   string `gorm:"column:host_type;type:varchar(128)" json:"host_type" description:" 主机类型"`
+	Port   int64  `gorm:"column:port;type:int(10)" json:"port" description:"主机登录端口"`
+	AuthType string `gorm:"column:auth_type;type:varchar(128)" json:"auth_type" description:"登录方式:passwd/ssh_key"`
+	User string `gorm:"column:user;type:varchar(256)" json:"creator" description:"主机用户"`
+	Password string `gorm:"column:password;type:varchar(256)" json:"password" description:"主机密码"`
+	Os string `gorm:"column:os;type:varchar(128)" json:"os" description:"操作系统"`
+	OsVersion string `gorm:"column:os_version;type:varchar(128)" json:"os_version" description:"系统版本"`
+	PrivateKey string `gorm:"column:private_key;type:text" json:"private_key" description:"主机密钥"`
+	Creator string `gorm:"column:creator;type:varchar(128)" json:"creator" description:"创建者"`
+}
+
+func (h *Host) Create() error {
+	tx := middleware.Sql.Begin()
+
+	err := tx.Table(HOST).Create(h).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
+func (h *Host) Delete() error {
+	tx := middleware.Sql.Begin()
+
+	err := tx.Table(HOST).Where("host_id = ?",h.HostId).Delete(h).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (h *Host) GetHostByIp() error {
+	err := middleware.Sql.Table(HOST).Where("host_ip = ?",h.HostIp).Take(&h).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New(fmt.Sprintf("host %v not found", h.HostIp))
+	} else if err != nil {
+		return err
+	}
+	return nil
+} 
+func (h *Host) getHostByName() error {
+	err := middleware.Sql.Table(HOST).Where("host_name = ?",h.HostName).Take(&h).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New(fmt.Sprintf("host %v not found", h.HostName))
+	} else if err != nil {
+		return err
+	}
+	
+	return nil
+}
+func (h *Host) GetHostById() error {
+	err := middleware.Sql.Table(HOST).Where("host_id = ?",h.HostId).Take(&h).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New(fmt.Sprintf("host %v not found", h.HostId))
+	} else if err != nil {
+		return err
+	}
+	return nil
+} 
+
+
+type K8sCluster struct {
+	Ctime    int64  `gorm:"column:ctime;type:int(11)" json:"ctime" description:"创建时间"`
+	Id       int64  `gorm:"column:id;PRIMARY_KEY;type:int(10)" json:"id"  description:"主键id"`
+	ClusterId string `gorm:"column:cluster_id;type:varchar(64);unique" json:"cluster_id"  description:"集群id"`
+	Mtime    int64  `gorm:"column:mtime;type:int(11)" json:"mtime" description:"修改时间"`
+	ClusterName   string `gorm:"column:cluster_name;type:varchar(256);unique" json:"cluster_name" description:"集群名称"`
+	Kubeconfig string `gorm:"column:kubeconfig;type:text;unique" json:"kubeconfig" description:"认证配置"`
+	Creator string `gorm:"column:creator;type:varchar(128)" json:"creator" description:"创建者"`
+	Env string `gorm:"column:env;type:varchar(16)" json:"env" description:"环境"`
+}
+
+func (k *K8sCluster) Create() error {
+	tx := middleware.Sql.Begin()
+
+	err := tx.Table(K8SCLUSTER).Create(k).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
+func (k *K8sCluster) Delete() error {
+	tx := middleware.Sql.Begin()
+
+	err := tx.Table(HOST).Where("cluster_id = ?",k.ClusterId).Delete(k).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k *K8sCluster) GetClusterByName() error {
+	err := middleware.Sql.Table(K8SCLUSTER).Where("cluster_name = ?",k.ClusterName).Take(&k).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New(fmt.Sprintf("cluster %v not found", k.ClusterName))
+	} else if err != nil {
+		return err
+	}
+	
+	return nil
+}
+func (k *K8sCluster) GetClusterById() error {
+	err := middleware.Sql.Table(K8SCLUSTER).Where("cluster_name = ?",k.ClusterName).Take(&k).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New(fmt.Sprintf("cluster %v not found", k.ClusterId))
+	} else if err != nil {
+		return err
+	}
+	return nil
+} 
+func (k *K8sCluster) List() ([]*K8sCluster,error) {
+	var list []*K8sCluster = make([]*K8sCluster,0)
+	err := middleware.Sql.Table(K8SCLUSTER).Find(&list).Error
+	if err != nil {
+		return nil,err
+	}
+	return list,nil
+} 

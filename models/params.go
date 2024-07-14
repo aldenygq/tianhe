@@ -1,30 +1,53 @@
 package models
 
-/*
+
 type ParamHeader struct {
-	//Emp   string `header:"UUAP-EMPLOYEE-NUMBER" binding:"required,min=1" label:"请求header(工号)"`
-	Email string `header:"Email" binding:"required,min=1" label:"请求header(邮箱)"`
-	Cname string `header:"User_Cn_Name" binding:"required,min=1" label:"请求header(用户中文名)"`
-	Uname string `header:"User_En_Name" binding:"required,min=1" label:"请求header(用户英文名)"`
+	Token string `header:"Access_Token" binding:"required,min=1" label:"请求header(token)"`
 }
- */
+type ParamRegisterCluster struct {
+	Kubeconfig string  `form:"kubeconfig"  json:"kubeconfig" binding:"required,min=0" label:"k8s认证文件"`
+	Env string `form:"env"  json:"env" binding:"required,min=0" label:"环境"`
+	ClusterName string `form:"cluster_name"  json:"cluster_name" binding:"required,min=0" label:"集群名称"`
+	ClusterId string 	`form:"cluster_id"  json:"cluster_id" binding:"required,min=0" label:"集群id"`
+	Creator string 
+}
+type ParamCreateNs struct {
+	ClusterId string 	`form:"cluster_id"  json:"cluster_id" binding:"required,min=0" label:"集群id"`
+	NameSpace string  `form:"namespace"  json:"namespace" binding:"required,min=0" label:"namespace"`
+}
+
+type ParamDelHost struct {
+	ParamHostId
+}
+type ParamHostId struct {
+	HostId string `form:"host_id"  json:"host_id" binding:"required,min=0" label:"主机id"`
+}
+type ParamHostInfo struct {
+	ParamHostId
+}
 
  // host参数
- type ParamAddHost struct {
+type ParamAddHost struct {
 	HostName string `form:"host_name"  json:"host_name" binding:"required,min=0" label:"主机名"`
 	HostIp string `form:"host_ip"  json:"host_ip" binding:"required,min=0" label:"主机ip"`
 	// kvm/cloud/physical
 	HostType   string `form:"host_type" json:"host_type" binding:"required,min=0" label:"主机类型"`
 	//ssh连接端口，默认为 22
-	Port       string `form:"port" json:"port" binding:"omitempty,min=0" label:"ssh连接端口"`
+	Port       int64 `form:"port" json:"port" binding:"required,gt=0" label:"ssh连接端口"`
 	AuthType   string `form:"auth_type" json:"auth_type" binding:"required,min=0" label:"登录认证类型"`
 	User       string `form:"user" json:"user" binding:"required,min=0" label:"登录用户"`
 	Password   string `form:"password" json:"password" binding:"required,min=0" label:"认证密码"`
+	Os  string `form:"os" json:"os" binding:"required,min=0" label:"系统版本"`
 	OsVersion  string `form:"os_version" json:"os_version" binding:"required,min=0" label:"系统版本"`
 	PrivateKey string `form:"private_key" json:"private_key" binding:"required,min=0" label:"认证密钥"`
-	//Creator    string `form:"private_key" json:"private_key" binding:"required,min=0" label:"认证密钥"
-
+	Creator string 
+	//Status string `form:"status" json:"status" binding:"required,min=0" label:"认证密钥"`
  }
+
+
+
+
+
  type ParamSetUserTokenExpire struct {
 	ExpireTime int64 `form:"expire_time"  json:"expire_time" binding:"omitempty,gt=0" label:"token 有效期"`
 }

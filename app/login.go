@@ -36,6 +36,13 @@ func CheckUseLoginByUname(c *gin.Context) {
 // 登出
 func Logout(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
+	uname,err := GetUserByToken(ctx)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf("get user by token failed:%v\n",err)
+		ctx.Response(middleware.HTTP_FAIL_CODE, fmt.Sprintf("登出失败,失败原因:%v\n",err), "") 
+		return 
+	}
+	/*
 	accessToken := c.GetHeader(middleware.ACCESS_TOKEN)
 	if accessToken == "" {
 		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("token invalid"))
@@ -48,7 +55,9 @@ func Logout(c *gin.Context) {
 		ctx.Response(middleware.HTTP_FAIL_CODE, fmt.Sprintf("登出失败,失败原因:%v\n",err), "") 
 		return
 	}
-	err = middleware.DelToken(ret.UEnName)
+	*/
+	err = middleware.DelToken(uname)
+	//err = middleware.DelToken(ret.UEnName)
 	if err != nil {
 		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("user logout failed:%v\n", err))
 		ctx.Response(middleware.HTTP_FAIL_CODE, fmt.Sprintf("登出失败,失败原因:%v\n",err), "") 
@@ -63,9 +72,7 @@ func Logout(c *gin.Context) {
 func Login(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	//参数校验
-	var (
-		param models.ParamLogin
-	)
+	var param models.ParamLogin
 
 	err := ctx.ValidateJson(&param)
 	if err != nil {
@@ -111,3 +118,20 @@ func SendSms(c *gin.Context) {
 	return
 }
 
+
+
+func GetUserByToken(ctx middleware.Context) (string,error) {
+	var header models.ParamHeader
+	err := ctx.ValidateHeader(&header)
+	if err != nil {
+		return "",err 
+	}
+	ret,err := middleware.ParseToken(header.Token)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get user by token failed:%v\n", err))
+		ctx.Response(middleware.HTTP_FAIL_CODE, fmt.Sprintf("登出失败,失败原因:%v\n",err), "") 
+		return "",err 
+	}
+	
+	return ret.UEnName,nil 
+}

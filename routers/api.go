@@ -25,7 +25,7 @@ func registerOncallRouter(oncall *gin.RouterGroup) {
 
 //用户中心
 func registerUserRouter(user *gin.RouterGroup) {
-	u := user.Group("/v1")
+	u := user.Group("/user")
 	{
 		//用户注册
 		u.POST("/register", app.UserRegister)
@@ -52,13 +52,12 @@ func registerUserRouter(user *gin.RouterGroup) {
 
 //登陆认证
 func registerLoginRouter(auth *gin.RouterGroup) {
-	a := auth.Group("/v1")
+	a := auth.Group("/auth")
 	{
 		//用户登录
 		a.POST("/login", app.Login)
 		//查询用户登陆状态
 		a.GET("/checkuserLoginByUname", app.CheckUseLoginByUname)
-		
 		//发送验证码
 		a.POST("/sendsms", app.SendSms)
 		a.Use(middleware.Auth())
@@ -78,10 +77,30 @@ func registerKeyRouter(key *gin.RouterGroup) {
 }
 */
 func registerHostRouter(host *gin.RouterGroup) {
-	h := host.Group("/v1")
+	h := host.Group("/host").Use(middleware.Auth())
 	{
-		//主机
+		//添加主机
 		h.POST("/addHost", app.AddHost)
+		//删除主机
+		h.POST("/delHost", app.DelHost)
+		//获取主机信息
+		h.GET("/hostInfo",app.HostInfo)
+	}
+}
+func registerK8sRouter(k8s *gin.RouterGroup) {
+	k := k8s.Group("/k8s").Use(middleware.Auth())
+	{
+		//添加集群
+		k.POST("/register", app.RegisterCluster)
+		//集群列表
+		k.GET("/list", app.ClusterList)
+		//创建 ns
+		k.POST("createNs",app.CreateNs)
+		k.POST("/register", app.RegisterCluster)
+		//删除主机
+		//k.POST("/deleter", app.DelHost)
+		//获取主机信息
+		//k.GET("/info/:id",app.HostInfo)
 	}
 }
 //健康检测
