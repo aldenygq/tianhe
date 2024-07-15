@@ -12,8 +12,30 @@ type ParamRegisterCluster struct {
 	Creator string 
 }
 type ParamCreateNs struct {
+	ParamClusterId
+	ParamNameSpace
+}
+type ParamNodeInfo struct {
+	ParamClusterId
+	ParamNode
+}
+type ParamClusterId struct {
 	ClusterId string 	`form:"cluster_id"  json:"cluster_id" binding:"required,min=0" label:"集群id"`
+}
+type ParamNameSpace struct {
 	NameSpace string  `form:"namespace"  json:"namespace" binding:"required,min=0" label:"namespace"`
+}
+type ParamPod struct {
+	PodName string  `form:"podname"  json:"podname" binding:"required,min=0" label:"podname"`
+}
+type ParamNode struct {
+	NodeName string  `form:"nodename"  json:"nodename" binding:"required,min=0" label:"nodename"`
+}
+
+type ParamPodInfo struct {
+	ParamClusterId
+	ParamNameSpace
+	ParamPod
 }
 
 type ParamDelHost struct {

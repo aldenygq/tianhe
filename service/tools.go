@@ -1,8 +1,13 @@
 package service
 
 import (
+	"tianhe/pkg"
+	"tianhe/models"
+	"tianhe/middleware"
 	"time"
 	"unicode"
+
+	"github.com/gin-gonic/gin"
 )
 
 func CompareTwoDay(day1,day2 string) int64{
@@ -34,4 +39,23 @@ func IsContainChinese(str string) bool {
 		}
 	}
 	return false
+}
+
+
+func GetK8sClientByClusterId(c *gin.Context,clusterid string) (*pkg.K8sClient,error) {
+	var (
+		cluster *models.K8sCluster = &models.K8sCluster{}
+	)
+	cluster.ClusterId = clusterid
+	err := cluster.GetClusterById()
+	if err != nil {
+		middleware.LogErr(c).Errorf("get cluster info by id %v failed:%v\n",clusterid,err)
+		return nil,err 
+	}
+	client,err := pkg.NewK8sClient(cluster.Kubeconfig)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",clusterid,err)
+		return nil,err 
+	}
+	return client,nil 
 }

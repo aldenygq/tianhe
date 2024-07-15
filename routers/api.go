@@ -95,8 +95,26 @@ func registerK8sRouter(k8s *gin.RouterGroup) {
 		//集群列表
 		k.GET("/list", app.ClusterList)
 		//创建 ns
-		k.POST("createNs",app.CreateNs)
-		k.POST("/register", app.RegisterCluster)
+		k.POST("/createNs",app.CreateNs)
+		//ns信息
+		k.GET("/nsInfo",app.NsInfo)
+		//ns列表
+		k.GET("/nsList",app.NsList)
+		//pod 信息
+		k.GET("/podInfo",app.PodInfo)
+		//pod list
+		k.GET("/podList",app.PodList)
+		//查看 pod 事件
+		k.GET("/podEvent",app.PodEvent)
+		//查看 podlog
+		k.GET("/podLog",app.PodLog)
+		//node列表
+		k.GET("/nodeList",app.NodeList)
+		//获取 node 信息
+		k.GET("/nodeInfo",app.NodeInfo)
+		//node 打标签
+		k.GET("/nodeLable",app.NodeLable)
+		//k.POST("/register", app.RegisterCluster)
 		//删除主机
 		//k.POST("/deleter", app.DelHost)
 		//获取主机信息
