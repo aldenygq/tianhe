@@ -112,8 +112,16 @@ func registerK8sRouter(k8s *gin.RouterGroup) {
 		k.GET("/nodeList",app.NodeList)
 		//获取 node 信息
 		k.GET("/nodeInfo",app.NodeInfo)
-		//node 打标签
+		//node标签
 		k.GET("/nodeLable",app.NodeLable)
+		//node污点
+		k.GET("/nodeTaint",app.NodeTaint)
+		//给 node 打标签
+		k.POST("/nodeLable",app.PatchNodeLable)
+		//给 node 设置污点
+		k.POST("/nodeTaint",app.PatchNodeTaint)
+		//设置 node 调度策略,enable(可调度)/disable(不可调度)
+		k.POST("/nodeSchedule",app.PatchNodeSchedule)
 		//k.POST("/register", app.RegisterCluster)
 		//删除主机
 		//k.POST("/deleter", app.DelHost)

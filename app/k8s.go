@@ -254,3 +254,84 @@ func NodeLable(c *gin.Context) {
 	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, data)
 	return
 }
+
+func NodeTaint(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	
+	var param models.ParamNodeInfo
+	err := ctx.Validate(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
+	data,msg,err := service.NodeTaint(ctx.Ctx,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get node %v taint by cluster %v failed:%v",param.ParamNode,param.ClusterId,err))
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, data)
+	return
+}
+
+func PatchNodeLable(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	
+	var param models.ParamPatchNodeLabel
+	err := ctx.ValidateJson(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
+	msg,err := service.PatchNodeLable(ctx.Ctx,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("patch node %v label by cluster %v failed:%v",param.ParamNode,param.ClusterId,err))
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
+	return
+}
+
+
+func PatchNodeTaint(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	
+	var param models.ParamPatchNodeTaint
+	err := ctx.ValidateJson(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
+	msg,err := service.PatchNodeTaint(ctx.Ctx,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("patch node %v taint by cluster %v failed:%v",param.ParamNode,param.ClusterId,err))
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
+	return
+}
+
+func PatchNodeSchedule(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	
+	var param models.ParamPatchNodeSchedule
+	err := ctx.ValidateJson(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
+	msg,err := service.PatchNodeSchedule(ctx.Ctx,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("patch node %v schedule rule %v by cluster %v failed:%v",param.ParamNode,param.ClusterId,err))
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
+	return
+}

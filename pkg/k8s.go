@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"errors"
 	//"net/http"
 	//"io/ioutil"
 	//"tianhe/middleware"
@@ -121,6 +122,79 @@ func (k *K8sClient) NodeLable(nodename string) (map[string]string,error) {
 		return nil,err 
 	}
 	return node.Labels,nil 
+}
+
+func (k *K8sClient) NodeTaint(nodename string) ([]coreV1.Taint,error) {
+	defer k.CloseClient()
+	node,err := k.Client.CoreV1().Nodes().Get(context.TODO(),nodename,metaV1.GetOptions{})
+	if err != nil {
+		return nil,err 
+	}
+	return node.Spec.Taints,nil 
+}
+
+func (k *K8sClient) PatchNodeLable(nodename string,labels map[string]string) error {
+	defer k.CloseClient()
+	node,err := k.Client.CoreV1().Nodes().Get(context.TODO(),nodename,metaV1.GetOptions{})
+	if err != nil {
+		return err 
+	}
+	// 添加或更新标签
+	if node.Labels == nil {
+		node.Labels = map[string]string{}
+	}
+	for k,v := range labels {
+		node.Labels[k] = v
+	}
+	// 更新节点
+	_, err = k.Client.CoreV1().Nodes().Update(context.TODO(), node, metaV1.UpdateOptions{})
+	if err != nil {
+		return err 
+	}
+	return nil 
+}
+func (k *K8sClient) PatchNodeTaint(nodename string,taints map[string]string) error {
+	defer k.CloseClient()
+	node,err := k.Client.CoreV1().Nodes().Get(context.TODO(),nodename,metaV1.GetOptions{})
+	if err != nil {
+		return err 
+	}
+	
+	for k,v := range taints {
+		taint := &coreV1.Taint{
+			Key:    k,
+			Value:  v,
+			Effect: coreV1.TaintEffectNoSchedule,
+		}
+		node.Spec.Taints = append(node.Spec.Taints, *taint)
+	}
+	// 更新节点
+	_, err = k.Client.CoreV1().Nodes().Update(context.TODO(), node, metaV1.UpdateOptions{})
+	if err != nil {
+		return err 
+	}
+	return nil 
+}
+
+func (k *K8sClient) PatchNodeSchedule(nodename,schedulerule string) error {
+	defer k.CloseClient()
+	node,err := k.Client.CoreV1().Nodes().Get(context.TODO(),nodename,metaV1.GetOptions{})
+	if err != nil {
+		return err 
+	}
+	switch schedulerule {
+	case "disable":
+		node.Spec.Unschedulable = true
+	case "enable":
+		node.Spec.Unschedulable = false
+	default:
+		return errors.New("schedule rule invalid")
+	}
+	_, err = k.Client.CoreV1().Nodes().Update(context.TODO(), node, metaV1.UpdateOptions{})
+    if err != nil {
+        return err 
+    }
+	return nil 
 }
 func (k *K8sClient) Log(ns,podname string) (runtime.Object,error) {
 	defer k.CloseClient()

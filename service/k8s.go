@@ -184,3 +184,61 @@ func NodeLable(c *gin.Context,param models.ParamNodeInfo) (interface{},string,er
 
 	return label,fmt.Sprintf("get node %v label by cluster %v success",param.NodeName,param.ClusterId),nil 
 }
+
+func NodeTaint(c *gin.Context,param models.ParamNodeInfo) (interface{},string,error) {
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return nil,fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	taint,err := client.NodeTaint(param.NodeName)
+	if err != nil {
+		middleware.LogErr(c).Errorf("get node %v taint by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err)
+		return nil,fmt.Sprintf("get node %v taint by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err),err 		
+	}
+
+	return taint,fmt.Sprintf("get node %v taint by cluster %v success",param.NodeName,param.ClusterId),nil 
+
+}
+
+func PatchNodeLable(c *gin.Context,param models.ParamPatchNodeLabel) (string,error) {
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	err = client.PatchNodeLable(param.NodeName,param.Labels)
+	if err != nil {
+		middleware.LogErr(c).Errorf("patch node %v label by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err)
+		return fmt.Sprintf("patch node %v label by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err),err 		
+	}
+	return fmt.Sprintf("patch node %v label by cluster %v success",param.NodeName,param.ClusterId,err),nil 
+}
+
+func PatchNodeTaint(c *gin.Context,param models.ParamPatchNodeTaint) (string,error) {
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	err = client.PatchNodeTaint(param.NodeName,param.Taints)
+	if err != nil {
+		middleware.LogErr(c).Errorf("patch node %v taint by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err)
+		return fmt.Sprintf("patch node %v taint by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err),err 		
+	}
+	return fmt.Sprintf("patch node %v taint by cluster %v success",param.NodeName,param.ClusterId,err),nil
+}
+
+func PatchNodeSchedule(c *gin.Context,param models.ParamPatchNodeSchedule) (string,error) {
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	err = client.PatchNodeSchedule(param.NodeName,param.ScheduleRule)
+	if err != nil {
+		middleware.LogErr(c).Errorf("patch node %v schedule rule %v by cluster %v failed:%v\n",param.NodeName,param.ScheduleRule,param.ClusterId,err)
+		return fmt.Sprintf("patch node %v schedule rule %v  by cluster %v failed:%v\n",param.NodeName,param.ScheduleRule,param.ClusterId,err),err 		
+	}
+	return fmt.Sprintf("patch node %v schedule rule %v  by cluster %v success",param.NodeName,param.ScheduleRule,param.ClusterId,err),nil
+}

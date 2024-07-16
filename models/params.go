@@ -19,6 +19,21 @@ type ParamNodeInfo struct {
 	ParamClusterId
 	ParamNode
 }
+type ParamPatchNodeLabel struct {
+	ParamClusterId
+	ParamNode
+	Labels map[string]string `form:"labels"  json:"labels" binding:"required,gt=0" label:"标签信息"`
+}
+type ParamPatchNodeTaint struct {
+	ParamClusterId
+	ParamNode
+	Taints map[string]string `form:"taint"  json:"labels" binding:"required,gt=0" label:"污点信息"`
+}
+type ParamPatchNodeSchedule struct {
+	ParamClusterId
+	ParamNode
+	ScheduleRule string `form:"schedule_rule"  json:"schedule_rule" binding:"required,min=0" label:"调度策略"`
+}
 type ParamClusterId struct {
 	ClusterId string 	`form:"cluster_id"  json:"cluster_id" binding:"required,min=0" label:"集群id"`
 }
