@@ -117,16 +117,17 @@ func registerK8sRouter(k8s *gin.RouterGroup) {
 		//node污点
 		k.GET("/nodeTaint",app.NodeTaint)
 		//给 node 打标签
-		k.POST("/nodeLable",app.PatchNodeLable)
+		k.POST("/patchNodeLable",app.PatchNodeLable)
 		//给 node 设置污点
-		k.POST("/nodeTaint",app.PatchNodeTaint)
+		k.POST("/patchNodeTaint",app.PatchNodeTaint)
 		//设置 node 调度策略,enable(可调度)/disable(不可调度)
-		k.POST("/nodeSchedule",app.PatchNodeSchedule)
-		//k.POST("/register", app.RegisterCluster)
-		//删除主机
-		//k.POST("/deleter", app.DelHost)
-		//获取主机信息
-		//k.GET("/info/:id",app.HostInfo)
+		k.POST("/patchNodeSchedule",app.PatchNodeSchedule)
+		//设置 node 排水
+		k.POST("/patchNodeDrain",app.PatchNodeDrain)
+		//node下 pod 列表
+		k.GET("/podsInNode",app.PodsInNode)
+		//resource yaml
+		k.GET("/resourceYaml",app.ResourceYaml)
 	}
 }
 //健康检测

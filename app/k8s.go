@@ -127,7 +127,7 @@ func PodInfo(c *gin.Context) {
 	}
 	data,msg,err := service.PodInfo(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get pod %v info by cluster %v and ns %v failed:%v\n",param.ParamPod,param.ClusterId,param.NameSpace,err))
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get pod %v info by cluster %v and ns %v failed:%v\n",param.PodName,param.ClusterId,param.NameSpace,err))
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -226,7 +226,7 @@ func NodeInfo(c *gin.Context) {
 	}
 	data,msg,err := service.NodeInfo(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get node %v info by cluster %v failed:%v",param.ParamNode,param.ClusterId,err))
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get node %v info by cluster %v failed:%v",param.NodeName,param.ClusterId,err))
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -246,7 +246,7 @@ func NodeLable(c *gin.Context) {
 	}
 	data,msg,err := service.NodeLable(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get node %v label by cluster %v failed:%v",param.ParamNode,param.ClusterId,err))
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get node %v label by cluster %v failed:%v",param.NodeName,param.ClusterId,err))
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -266,7 +266,7 @@ func NodeTaint(c *gin.Context) {
 	}
 	data,msg,err := service.NodeTaint(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get node %v taint by cluster %v failed:%v",param.ParamNode,param.ClusterId,err))
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get node %v taint by cluster %v failed:%v",param.NodeName,param.ClusterId,err))
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -286,7 +286,7 @@ func PatchNodeLable(c *gin.Context) {
 	}
 	msg,err := service.PatchNodeLable(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("patch node %v label by cluster %v failed:%v",param.ParamNode,param.ClusterId,err))
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("patch node %v label by cluster %v failed:%v",param.NodeName,param.ClusterId,err))
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -307,7 +307,7 @@ func PatchNodeTaint(c *gin.Context) {
 	}
 	msg,err := service.PatchNodeTaint(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("patch node %v taint by cluster %v failed:%v",param.ParamNode,param.ClusterId,err))
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("patch node %v taint by cluster %v failed:%v",param.NodeName,param.ClusterId,err))
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -327,11 +327,70 @@ func PatchNodeSchedule(c *gin.Context) {
 	}
 	msg,err := service.PatchNodeSchedule(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("patch node %v schedule rule %v by cluster %v failed:%v",param.ParamNode,param.ClusterId,err))
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("patch node %v schedule rule %v by cluster %v failed:%v",param.NodeName,param.ScheduleRule,param.ClusterId,err))
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
 
 	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
+	return
+}
+
+func PatchNodeDrain(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	
+	var param models.ParamNodeInfo
+	err := ctx.ValidateJson(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
+	msg,err := service.PatchNodeDrain(ctx.Ctx,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("patch node %v drain  by cluster %v failed:%v",param.NodeName,param.ClusterId,err))
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
+	return
+}
+
+func PodsInNode(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	
+	var param models.ParamNodeInfo
+	err := ctx.Validate(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
+	data,msg,err := service.PodsInNode(ctx.Ctx,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get pod list by node %v and cluster %v failed:%v",param.NodeName,param.ClusterId,err))
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, data)
+	return
+}
+func ResourceYaml(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	
+	var param models.ParamReourceYaml
+	err := ctx.Validate(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
+	data,msg,err := service.ParamReourceYaml(ctx.Ctx,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get node %v yaml by cluster %v failed:%v",param.NodeName,param.ClusterId,err))
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, data)
 	return
 }

@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"tianhe/middleware"
 	"tianhe/models"
+	"tianhe/pkg"
 	"time"
+	"errors"
 
 	"github.com/gin-gonic/gin"
 )
@@ -212,7 +214,7 @@ func PatchNodeLable(c *gin.Context,param models.ParamPatchNodeLabel) (string,err
 		middleware.LogErr(c).Errorf("patch node %v label by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err)
 		return fmt.Sprintf("patch node %v label by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err),err 		
 	}
-	return fmt.Sprintf("patch node %v label by cluster %v success",param.NodeName,param.ClusterId,err),nil 
+	return fmt.Sprintf("patch node %v label by cluster %v success",param.NodeName,param.ClusterId),nil 
 }
 
 func PatchNodeTaint(c *gin.Context,param models.ParamPatchNodeTaint) (string,error) {
@@ -226,7 +228,7 @@ func PatchNodeTaint(c *gin.Context,param models.ParamPatchNodeTaint) (string,err
 		middleware.LogErr(c).Errorf("patch node %v taint by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err)
 		return fmt.Sprintf("patch node %v taint by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err),err 		
 	}
-	return fmt.Sprintf("patch node %v taint by cluster %v success",param.NodeName,param.ClusterId,err),nil
+	return fmt.Sprintf("patch node %v taint by cluster %v success",param.NodeName,param.ClusterId),nil
 }
 
 func PatchNodeSchedule(c *gin.Context,param models.ParamPatchNodeSchedule) (string,error) {
@@ -240,5 +242,91 @@ func PatchNodeSchedule(c *gin.Context,param models.ParamPatchNodeSchedule) (stri
 		middleware.LogErr(c).Errorf("patch node %v schedule rule %v by cluster %v failed:%v\n",param.NodeName,param.ScheduleRule,param.ClusterId,err)
 		return fmt.Sprintf("patch node %v schedule rule %v  by cluster %v failed:%v\n",param.NodeName,param.ScheduleRule,param.ClusterId,err),err 		
 	}
-	return fmt.Sprintf("patch node %v schedule rule %v  by cluster %v success",param.NodeName,param.ScheduleRule,param.ClusterId,err),nil
+	return fmt.Sprintf("patch node %v schedule rule %v  by cluster %v success",param.NodeName,param.ScheduleRule,param.ClusterId),nil
+}
+
+func PatchNodeDrain(c *gin.Context,param models.ParamNodeInfo) (string,error) {
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	err = client.PatchNodeDrain(param.NodeName)
+	if err != nil {
+		middleware.LogErr(c).Errorf("patch node %v drain  by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err)
+		return fmt.Sprintf("patch node %v drain by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err),err 		
+	}
+	return fmt.Sprintf("patch node %v drain  by cluster %v success",param.NodeName,param.ClusterId),nil
+}
+
+func PodsInNode(c *gin.Context,param models.ParamNodeInfo) (interface{},string,error) {
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return nil,fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	pods,err := client.PodsInNode(param.NodeName)
+	if err != nil {
+		middleware.LogErr(c).Errorf("get pod list by node %v and cluster %v failed:%v\n",param.NodeName,param.ClusterId,err)
+		return nil,fmt.Sprintf("get pod list by node %v and cluster %v failed:%v\n",param.NodeName,param.ClusterId,err),err 		
+	}
+	return pods,fmt.Sprintf("get pod list by node %v and cluster %v success",param.NodeName,param.ClusterId),nil
+}
+
+func ParamReourceYaml(c *gin.Context,param models.ParamReourceYaml) (string,string,error) {
+	var (
+		err error
+		resource interface{}
+	) 
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return "",fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	switch param.ResourceType {
+	case "node":
+		resource,err = client.NodeInfo(param.ResourceName)
+	case "pod":
+		resource,err = client.PodInfo(param.NameSpace,param.ResourceName)
+	case "deployment":
+		resource,err = client.DeplymentInfo(param.NameSpace,param.ResourceName) 
+	case "svc":
+		resource,err = client.SvcInfo(param.NameSpace,param.ResourceName) 
+	case "statefulset":
+		resource,err = client.StatefulSetInfo(param.NameSpace,param.ResourceName) 
+	case "daemonset":
+		resource,err = client.DaemonSetInfo(param.NameSpace,param.ResourceName) 
+	case "job":
+		resource,err = client.JobInfo(param.NameSpace,param.ResourceName) 
+	case "crobjob":
+		resource,err = client.CronjobInfo(param.NameSpace,param.ResourceName) 
+	case "namespace":
+		resource,err = client.NsInfo(param.ResourceName) 
+	case "ingress":
+		resource,err = client.IngressInfo(param.NameSpace,param.ResourceName)
+	case "configmap":
+		resource,err = client.ConfigMapInfo(param.NameSpace,param.ResourceName)
+	case "secret":
+		resource,err = client.SecretInfo(param.NameSpace,param.ResourceName)
+	default:
+		middleware.LogErr(c).Errorf("resource type:%v invalid",param.ResourceType)
+		return "",fmt.Sprintf("resource type:%v invalid",param.ResourceType),errors.New(fmt.Sprintf("resource type:%v invalid",param.ResourceType))
+	}
+	if err != nil {
+		middleware.LogErr(c).Errorf("get type %v resource %v info by ns %v and cluster %v failed:%v\n",param.ResourceType,param.ResourceName,param.NameSpace,param.ParamClusterId,err)
+		return "",fmt.Sprintf("get type %v resource %v info by ns %v and cluster %v failed:%v\n",param.ResourceType,param.ResourceName,param.NameSpace,param.ParamClusterId,err),err 
+	}
+	/*
+	node,err := client.NodeInfo(param.NodeName)
+	if err != nil {
+		middleware.LogErr(c).Errorf("get  %v %v by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err)
+		return "",fmt.Sprintf("get  node %v by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err),err 		
+	}
+	*/
+	out,err := pkg.ToYAML(resource)
+	if err != nil {
+		middleware.LogErr(c).Errorf("node %v info to yaml failed:%v\n",param.NodeName,err)
+		return "",fmt.Sprintf("node %v info to yaml failed:%v\n",param.NodeName,err),err 
+	}
+	return out,fmt.Sprintf("node %v info to yaml success",param.NodeName),nil
 }

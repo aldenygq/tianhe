@@ -5,16 +5,14 @@ import (
 	"encoding/base64"
 	"fmt"
 	"errors"
-	//"net/http"
-	//"io/ioutil"
-	//"tianhe/middleware"
-	//"k8s.io/kubectl/pkg/scheme"
-	//"github.com/gin-gonic/gin"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	appsV1 "k8s.io/api/apps/v1"
+	batchV1 "k8s.io/api/batch/v1"
+	networkV1 "k8s.io/api/networking/v1"
 	
 )
 
@@ -195,6 +193,108 @@ func (k *K8sClient) PatchNodeSchedule(nodename,schedulerule string) error {
         return err 
     }
 	return nil 
+}
+func (k *K8sClient) DeplymentInfo(ns,deployname string) (*appsV1.Deployment,error) {
+	defer k.CloseClient()
+	deployinfo,err := k.Client.AppsV1().Deployments(ns).Get(context.Background(), deployname, metaV1.GetOptions{})
+	if err != nil {
+		return nil,err 
+	}
+	return deployinfo,nil 
+}
+func (k *K8sClient) StatefulSetInfo(ns,statefulset string) (*appsV1.StatefulSet,error) {
+	defer k.CloseClient()
+	statefulsetinfo,err := k.Client.AppsV1().StatefulSets(ns).Get(context.Background(), statefulset, metaV1.GetOptions{})
+	if err != nil {
+		return nil,err 
+	}
+	return statefulsetinfo,nil 
+}
+func (k *K8sClient) DaemonSetInfo(ns,daemonset string) (*appsV1.DaemonSet,error) {
+	defer k.CloseClient()
+	daemonsetinfo,err := k.Client.AppsV1().DaemonSets(ns).Get(context.Background(),daemonset,metaV1.GetOptions{})
+	if err != nil {
+		return nil,err 
+	}
+	return daemonsetinfo,nil 
+}
+func (k *K8sClient) JobInfo(ns,job string) (*batchV1.Job,error) {
+	defer k.CloseClient()
+	jobinfo,err := k.Client.BatchV1().Jobs(ns).Get(context.Background(),job,metaV1.GetOptions{})
+	if err != nil {
+		return nil,err 
+	}
+	return jobinfo,nil 
+}
+func (k *K8sClient) CronjobInfo(ns,cronjob string) (*batchV1.CronJob,error) {
+	defer k.CloseClient()
+	cronjobinfo,err := k.Client.BatchV1().CronJobs(ns).Get(context.Background(),cronjob,metaV1.GetOptions{})
+	if err != nil {
+		return nil,err 
+	}
+	return cronjobinfo,nil 
+}
+func (k *K8sClient) IngressInfo(ns,ingressname string) (*networkV1.Ingress,error) {
+	defer k.CloseClient()
+	ingress, err := k.Client.NetworkingV1().Ingresses(ns).Get(context.TODO(), ingressname, metaV1.GetOptions{})
+    if err != nil {
+        return nil,err 
+    }
+	return ingress,nil 
+} 
+func (k *K8sClient) SvcInfo(ns,svcname string)  (*coreV1.Service,error) {
+	defer k.CloseClient()
+	// 获取Service对象
+	service, err := k.Client.CoreV1().Services(ns).Get(context.Background(), svcname, metaV1.GetOptions{})
+	if err != nil {
+		return nil,err  
+	}
+	return service,nil 
+}
+func (k *K8sClient) PatchNodeDrain(nodename string) error {
+	defer k.CloseClient()
+    pods, err := k.Client.CoreV1().Pods("").List(context.TODO(), metaV1.ListOptions{
+        FieldSelector: "spec.nodeName=" + nodename,
+    })
+    if err != nil {
+        return err 
+    }
+	var seconds *int64 
+	i := int64(0)
+	seconds = &i
+	for _, pod := range pods.Items {
+        err := k.Client.CoreV1().Pods(pod.Namespace).Delete(context.TODO(), pod.Name, metaV1.DeleteOptions{GracePeriodSeconds: seconds})
+        if err != nil {
+        	return err 
+        } 
+    }
+	return nil 
+}
+func (k *K8sClient) PodsInNode(nodename string) (*coreV1.PodList,error) {
+	defer k.CloseClient()
+	pods, err := k.Client.CoreV1().Pods("").List(context.TODO(), metaV1.ListOptions{
+        FieldSelector: "spec.nodeName=" + nodename,
+    })
+    if err != nil {
+        return nil,err 
+    }
+	return pods,nil 
+}
+func (k *K8sClient) ConfigMapInfo(ns,mapname string) (*coreV1.ConfigMap,error) {
+	defer k.CloseClient()
+	mapinfo,err := k.Client.CoreV1().ConfigMaps(ns).Get(context.Background(),mapname,metaV1.GetOptions{})
+	if err != nil {
+        return nil,err 
+    }
+	return mapinfo,nil 
+}
+func (k *K8sClient) SecretInfo(ns,sectet string) (*coreV1.Secret,error) {
+	defer k.CloseClient()
+	secretinfo,err := k.Client.CoreV1().Secrets(ns).Get(context.Background(),sectet,metaV1.GetOptions{})
+	if err != nil {
+        return nil,err 
+    }
+	return secretinfo,nil 
 }
 func (k *K8sClient) Log(ns,podname string) (runtime.Object,error) {
 	defer k.CloseClient()
