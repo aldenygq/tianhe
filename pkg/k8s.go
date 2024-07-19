@@ -13,6 +13,7 @@ import (
 	appsV1 "k8s.io/api/apps/v1"
 	batchV1 "k8s.io/api/batch/v1"
 	networkV1 "k8s.io/api/networking/v1"
+	storageV1 "k8s.io/api/storage/v1"
 	
 )
 
@@ -295,6 +296,30 @@ func (k *K8sClient) SecretInfo(ns,sectet string) (*coreV1.Secret,error) {
         return nil,err 
     }
 	return secretinfo,nil 
+}
+func (k *K8sClient) PvcInfo(ns,pvcname string) (*coreV1.PersistentVolumeClaim,error) {
+	defer k.CloseClient()
+	pvcinfo,err := k.Client.CoreV1().PersistentVolumeClaims(ns).Get(context.Background(),pvcname,metaV1.GetOptions{})
+	if err != nil {
+        return nil,err 
+    }
+	return pvcinfo,nil
+}
+func (k *K8sClient) StorageClassInfo(ns,name string) (*storageV1.StorageClass,error) {
+	defer k.CloseClient()
+	storageClass, err := k.Client.StorageV1().StorageClasses().Get(context.TODO(), name, metaV1.GetOptions{})
+    if err != nil {
+        return nil,err 
+    }
+	return storageClass,nil 
+}
+func (k *K8sClient) PvInfo(pvname string) (*coreV1.PersistentVolume,error) {
+	defer k.CloseClient()
+	pvinfo,err := k.Client.CoreV1().PersistentVolumes().Get(context.Background(),pvname,metaV1.GetOptions{})
+	if err != nil {
+        return nil,err 
+    }
+	return pvinfo,nil
 }
 func (k *K8sClient) Log(ns,podname string) (runtime.Object,error) {
 	defer k.CloseClient()

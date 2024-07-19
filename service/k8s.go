@@ -308,6 +308,12 @@ func ParamReourceYaml(c *gin.Context,param models.ParamReourceYaml) (string,stri
 		resource,err = client.ConfigMapInfo(param.NameSpace,param.ResourceName)
 	case "secret":
 		resource,err = client.SecretInfo(param.NameSpace,param.ResourceName)
+	case "pvc":
+		resource,err = client.PvcInfo(param.NameSpace,param.ResourceName)
+	case "pv":
+		resource,err = client.PvInfo(param.ResourceName)
+	case "storageclass":
+		resource,err = client.StorageClassInfo(param.NameSpace,param.ResourceName)
 	default:
 		middleware.LogErr(c).Errorf("resource type:%v invalid",param.ResourceType)
 		return "",fmt.Sprintf("resource type:%v invalid",param.ResourceType),errors.New(fmt.Sprintf("resource type:%v invalid",param.ResourceType))
