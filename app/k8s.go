@@ -26,17 +26,17 @@ func ClusterEvent(c *gin.Context) {
 	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, data)
 	return
 }
-func DeleteNode(c *gin.Context) {
+func DeleteResource(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
-	var param models.ParamNodeInfo
+	var param models.ParamReourceYaml
 	err := ctx.ValidateJson(&param)
 	if err != nil {
 		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
 		return
 	}
-	msg,err := service.DeleteNode(c,param)
+	msg,err := service.DeleteResource(c,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("delete node:%v by cluster failed:%v\n",param.NodeName,param.ClusterId,err))
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("%v",err))
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -61,25 +61,8 @@ func WorkloadRollUpdate(c *gin.Context) {
 	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
 	return
 }
-/*
-func StatefulSetRollUpdate(c *gin.Context){
-	ctx := middleware.Context{Ctx: c}
-	var param models.ParamRollUpdateStatefulSet
-	err := ctx.ValidateJson(&param)
-	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
-		return
-	}
-	msg,err := service.StatefulSetRollUpdate(c,param)
-	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("statefulset %v roll restart by cluster failed:%v\n",param.ParamStatefulSet,param.ClusterId,err))
-		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
-		return
-	}
-	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
-	return
-}
-*/
+
+
 func RegisterCluster(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	var param models.ParamRegisterCluster

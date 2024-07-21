@@ -454,16 +454,109 @@ func (k *K8sClient) PatchNodeDrain(nodename string) error {
     if err != nil {
         return err 
     }
-	//var seconds *int64 
-	//i := int64(0)
-	//seconds = &i
 	for _, pod := range pods.Items {
-        err := k.Client.CoreV1().Pods(pod.Namespace).Delete(context.TODO(), pod.Name, metaV1.DeleteOptions{GracePeriodSeconds: Int64ToPointInt64(0)})
-        if err != nil {
+        err := k.DeletePod(pod.Namespace,pod.Name)
+		if err != nil {
         	return err 
         } 
     }
 	return nil 
+}
+func (k *K8sClient) DeletePod(ns,podname string) error {
+	defer k.CloseClient()
+	err := k.Client.CoreV1().Pods(ns).Delete(context.TODO(), podname, metaV1.DeleteOptions{GracePeriodSeconds: Int64ToPointInt64(0)})
+	if err != nil {
+		return err 
+	} 
+	return nil 
+}
+func (k *K8sClient) DeleteDeployment(ns,name string) error {
+	defer k.CloseClient()
+	err := k.Client.AppsV1().Deployments(ns).Delete(context.TODO(), name, metaV1.DeleteOptions{GracePeriodSeconds: Int64ToPointInt64(0)})
+	if err != nil {
+		return err 
+	} 
+	return nil 
+}
+func (k *K8sClient) DeleteStatefulSet(ns,name string) error {
+	defer k.CloseClient()
+	err := k.Client.AppsV1().StatefulSets(ns).Delete(context.TODO(), name, metaV1.DeleteOptions{GracePeriodSeconds: Int64ToPointInt64(0)})
+	if err != nil {
+		return err 
+	} 
+	return nil 
+}
+func (k *K8sClient) DeleteDaemonSet(ns,name string) error {
+	defer k.CloseClient()
+	err := k.Client.AppsV1().DaemonSets(ns).Delete(context.TODO(), name, metaV1.DeleteOptions{GracePeriodSeconds: Int64ToPointInt64(0)})
+	if err != nil {
+		return err 
+	} 
+	return nil 
+}
+func (k *K8sClient) DeleteJob(ns,name string) error {
+	defer k.CloseClient()
+	err := k.Client.BatchV1().Jobs(ns).Delete(context.TODO(), name, metaV1.DeleteOptions{GracePeriodSeconds: Int64ToPointInt64(0)})
+	if err != nil {
+		return err 
+	} 
+	return nil 
+}
+func (k *K8sClient) DeleteCronJob(ns,name string) error {
+	defer k.CloseClient()
+	err := k.Client.BatchV1().CronJobs(ns).Delete(context.TODO(), name, metaV1.DeleteOptions{GracePeriodSeconds: Int64ToPointInt64(0)})
+	if err != nil {
+		return err 
+	} 
+	return nil 
+}
+func (k *K8sClient) DeleteService(ns,name string) error {
+	defer k.CloseClient()
+	err := k.Client.CoreV1().Services(ns).Delete(context.TODO(), name, metaV1.DeleteOptions{GracePeriodSeconds: Int64ToPointInt64(0)})
+	if err != nil {
+		return err 
+	} 
+	return nil
+}
+func (k *K8sClient) DeleteIngress(ns,name string) error {
+	defer k.CloseClient()
+	err := k.Client.NetworkingV1().Ingresses(ns).Delete(context.TODO(), name, metaV1.DeleteOptions{GracePeriodSeconds: Int64ToPointInt64(0)})
+	if err != nil {
+		return err 
+	} 
+	return nil
+}
+func (k *K8sClient) DeleteSecret(ns,name string) error {
+	defer k.CloseClient()
+	err := k.Client.CoreV1().Secrets(ns).Delete(context.TODO(), name, metaV1.DeleteOptions{GracePeriodSeconds: Int64ToPointInt64(0)})
+	if err != nil {
+		return err 
+	} 
+	return nil
+}
+func (k *K8sClient) DeletePvc(ns,name string) error {
+	defer k.CloseClient()
+	err := k.Client.CoreV1().PersistentVolumeClaims(ns).Delete(context.TODO(), name, metaV1.DeleteOptions{GracePeriodSeconds: Int64ToPointInt64(0)})
+	if err != nil {
+		return err 
+	} 
+	return nil
+}
+func (k *K8sClient) DeletePv(name string) error {
+	defer k.CloseClient()
+	err := k.Client.CoreV1().PersistentVolumes().Delete(context.TODO(), name, metaV1.DeleteOptions{GracePeriodSeconds: Int64ToPointInt64(0)})
+	if err != nil {
+		return err 
+	} 
+	return nil
+}
+func (k *K8sClient) DeleteStorageClass(name string) error {
+	defer k.CloseClient()
+	err := k.Client.StorageV1().StorageClasses().Delete(context.TODO(), name, metaV1.DeleteOptions{GracePeriodSeconds: Int64ToPointInt64(0)})
+	if err != nil {
+		return err 
+	} 
+	return nil
 }
 func (k *K8sClient) PodsInNode(nodename string) (*coreV1.PodList,error) {
 	defer k.CloseClient()

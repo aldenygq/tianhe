@@ -122,8 +122,8 @@ func registerK8sRouter(k8s *gin.RouterGroup) {
 		k.GET("/resourceInfo",app.ResourceInfo)
 		//cluster event
 		k.GET("/clusterEvent",app.ClusterEvent)
-		//删除节点
-		k.POST("/deleteNode",app.DeleteNode)
+		//删除资源
+		k.POST("/deleteResource",app.DeleteResource)
 		//工作负载滚动重启，涉及：deployment/statefulset/daemonset 
 		k.POST("/workloadRollupdate",app.WorkloadRollUpdate)
 	}

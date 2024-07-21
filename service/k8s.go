@@ -374,19 +374,47 @@ func ClusterEvent(c *gin.Context,param models.ParamClusterId) (interface{},strin
 	return events,fmt.Sprintf("get cluster %v event success",param.ClusterId),nil 
 }
 
-func DeleteNode(c *gin.Context,param models.ParamNodeInfo) (string,error) {
+func DeleteResource(c *gin.Context,param models.ParamReourceYaml) (string,error) {
+	var err error 
 	client,err := GetK8sClientByClusterId(c,param.ClusterId)
 	if err != nil {
 		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
 		return fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
 	}
 
-	err = client.DeleteNode(param.NodeName)
-	if err != nil {
-		middleware.LogErr(c).Errorf("delete node %v by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err)
-		return fmt.Sprintf("delete node %v by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err),err 
+	switch param.ResourceType {
+	case "node":
+		err = client.DeleteNode(param.ResourceName)
+	case "pod":
+		err = client.DeletePod(param.NameSpace,param.ResourceName)
+	case "deployment":
+		err = client.DeleteDeployment(param.NameSpace,param.ResourceName)
+	case "statefulset":
+		err = client.DeleteStatefulSet(param.NameSpace,param.ResourceName)
+	case "daemonset":
+		err = client.DeleteDaemonSet(param.NameSpace,param.ResourceName)
+	case "job":
+		err = client.DeleteJob(param.NameSpace,param.ResourceName)
+	case "cronjob":
+		err = client.DeleteCronJob(param.NameSpace,param.ResourceName)
+	case "svc":
+		err = client.DeleteService(param.NameSpace,param.ResourceName)
+	case "ingress":
+		err = client.DeleteIngress(param.NameSpace,param.ResourceName)
+	case "secret":
+		err = client.DeleteSecret(param.NameSpace,param.ResourceName)
+	case "pvc":
+		err = client.DeletePvc(param.NameSpace,param.ResourceName)
+	case "pv":
+		err = client.DeletePv(param.ResourceName)
+	case "storageclass":
+		err = client.DeleteStorageClass(param.ResourceName)
+	default:
+		middleware.LogErr(c).Errorf("resource type %v invalid",param.ResourceType)
+		return fmt.Sprintf("resource type %v invalid",param.ResourceType),errors.New(fmt.Sprintf("resource type %v invalid",param.ResourceType))
 	}
-	return fmt.Sprintf("delete node %v by cluster %v success",param.NodeName,param.ClusterId),nil 
+
+	return fmt.Sprintf("delete resource %v by cluster %v success",param.ResourceName,param.ClusterId),nil 
 }
 
 func WorkloadRollUpdate(c *gin.Context,param models.ParamReourceInfo) (string,error) {
