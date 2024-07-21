@@ -837,6 +837,18 @@ func (k *K8sClient) UpdateConfigMap(ns,configmap string,kv map[string]string) er
     }
     return nil
 }
+func (k *K8sClient) CreateResourceByYaml(obj interface{}) error {
+	var err error 
+	switch obj.(type) {
+	case coreV1.Namespace:
+		_,err = k.Client.CoreV1().Namespaces().Create(context.TODO(), obj.(*coreV1.Namespace),metaV1.CreateOptions{})
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func (k *K8sClient) CloseClient() {
 	k.Client = nil

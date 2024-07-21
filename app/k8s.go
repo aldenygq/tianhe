@@ -124,7 +124,7 @@ func CreateResourceByYaml(c *gin.Context) {
 	}
 	msg,err := service.CreateResourceByYaml(c,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf("%v",err))
+		middleware.LogErr(ctx.Ctx).Errorf("%v",err)
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}

@@ -22,6 +22,7 @@ type ParamCreateConfigmap struct {
 	KV  map[string]string `form:"kv"  json:"kv" binding:"required,len=0" label:"k/v"`
 }
 type ParamCreateResourceYaml struct {
+	ParamClusterId
 	ResourceType string `form:"resource_type"  json:"resource_type" binding:"required,min=0" label:"资源类型"`
 	ResourceYaml string `form:"resource_yaml"  json:"resource_yaml" binding:"required,min=0" label:"资源 yaml 文件"`
 }

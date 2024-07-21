@@ -566,9 +566,11 @@ func UpdateSecret(c *gin.Context,param models.ParamCreateSecret) (string,error) 
 	return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v, update secret %v success",param.ClusterId,param.NameSpace,param.Type,param.SecretName),nil 
 }
 
-func CreateResourceByYaml(c,param models.ParamCreateResourceYaml) (string,error ) {
-	//var deployment appsV1.Deployment
-	var err error 
+func CreateResourceByYaml(c *gin.Context,param models.ParamCreateResourceYaml) (string,error ) {
+	var (
+		resource interface{}
+		err error 
+	)
 	client,err := GetK8sClientByClusterId(c,param.ClusterId)
 	if err != nil {
 		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
@@ -582,9 +584,25 @@ func CreateResourceByYaml(c,param models.ParamCreateResourceYaml) (string,error 
 			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
 			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
 		}
-
+		resource = namespace
+	case "deployment":
+		var deployment appsV1.Deployment
+		err = pkg.CheckYamlFormat(param.ResourceYaml,deployment)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = deployment
+	case "daemonset":
+		var daemonset appsV1.DaemonSet
+		err = pkg.CheckYamlFormat(param.ResourceYaml,daemonset)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = daemonset
 	}
-	err := client.CreateResourceByYaml()
+	err = client.CreateResourceByYaml(resource)
 	if err != nil {
 		middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
 		return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
