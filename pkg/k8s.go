@@ -13,11 +13,11 @@ import (
 	networkV1 "k8s.io/api/networking/v1"
 	storageV1 "k8s.io/api/storage/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 type K8sClient struct {
@@ -52,6 +52,62 @@ func (k *K8sClient) CreateNs(ns string) error {
     if err != nil {
         return err 
     }
+	return nil 
+}
+func (k *K8sClient) CreateSecretByOpaque(ns,secretname string,kv map[string][]byte) error {
+	defer k.CloseClient()
+	secret := &coreV1.Secret{
+        ObjectMeta: metaV1.ObjectMeta{
+            Name: secretname,
+        },
+        Type: "Opaque",
+        Data: kv,
+    }
+	_,err := k.Client.CoreV1().Secrets(ns).Create(context.TODO(), secret, metaV1.CreateOptions{})
+    if err != nil {
+        return err 
+    }
+	return nil 
+}
+func (k *K8sClient) CreateSecretByTlsCert(ns,secretname,cert,key string) error {
+	defer k.CloseClient()
+	data := map[string][]byte{
+        coreV1.TLSCertKey:       []byte(cert),
+        coreV1.TLSPrivateKeyKey: []byte(key),
+    }
+	secret := &coreV1.Secret{
+        ObjectMeta: metaV1.ObjectMeta{
+            Name:      secretname,
+            Namespace: ns,
+        },
+        Type: coreV1.SecretTypeTLS,
+        Data: data,
+    }
+	_, err := k.Client.CoreV1().Secrets(ns).Create(context.TODO(),secret,metaV1.CreateOptions{})
+    if err != nil {
+        return err 
+    }
+	return nil 
+}
+func (k *K8sClient) CreateSecretByImageCert(ns,secretname,url,user,password string) error {
+	defer k.CloseClient()
+
+	dockerConfigJson := fmt.Sprintf(`{"auths":{"%v":{"username":"%v","password":"%v"}}}"`,url,user,password)
+	secret := &coreV1.Secret{
+        ObjectMeta: metaV1.ObjectMeta{
+            Name: secretname,
+        },
+		Type: coreV1.SecretTypeDockerConfigJson,
+        Data: map[string][]byte{
+            ".dockerconfigjson": []byte(dockerConfigJson),
+		},
+    }
+
+    _, err := k.Client.CoreV1().Secrets(ns).Create(context.TODO(), secret, metaV1.CreateOptions{})
+    if err != nil {
+        return err 
+    }
+ 
 	return nil 
 }
 func (k *K8sClient) NsInfo(ns string) (*coreV1.Namespace,error) {
@@ -697,6 +753,34 @@ func (k *K8sClient) Log(ns,podname string) (runtime.Object,error) {
     }
 	*/
 	return podLogs,nil 
+}
+
+func (k *K8sClient) CreateConfigMap(ns,configmap string,kv map[string]string) error {
+	defer k.CloseClient()
+	configMap := &coreV1.ConfigMap{
+        ObjectMeta: metaV1.ObjectMeta{
+            Name: configmap,
+        },
+        Data: kv,
+    }
+	_,err := k.Client.CoreV1().ConfigMaps(ns).Create(context.TODO(),configMap,metaV1.CreateOptions{})
+    if err != nil {
+        return err
+    }
+	return nil 
+}
+func (k *K8sClient) UpdateConfigMap(ns,configmap string,kv map[string]string) error {
+	defer k.CloseClient()
+	cm,err := k.ConfigMapInfo(ns,configmap)
+	if err != nil {
+		return err 
+	}
+	cm.Data = kv
+	_,err = k.Client.CoreV1().ConfigMaps(ns).Update(context.TODO(),cm,metaV1.UpdateOptions{})
+    if err !=nil {
+        return err
+    }
+    return nil
 }
 
 func (k *K8sClient) CloseClient() {

@@ -441,3 +441,65 @@ func WorkloadRollUpdate(c *gin.Context,param models.ParamReourceInfo) (string,er
 	}
 	return fmt.Sprintf("deployment %v roll restart by cluster %v success",param.ResourceName,param.ClusterId),nil 
 }
+func CreateConfigMap(c *gin.Context,param models.ParamCreateConfigmap) (string,error) {
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	err = client.CreateConfigMap(param.NameSpace,param.ConfigMapName,param.KV)
+	if err != nil {
+		middleware.LogErr(c).Errorf("cluster:%v,namespace:%v,create configmap %v failed:%v\n",param.ClusterId,param.NameSpace,param.ConfigMapName,err)
+		return fmt.Sprintf("cluster:%v,namespace:%v,create configmap %v failed:%v\n",param.ClusterId,param.NameSpace,param.ConfigMapName,err),err 
+	}
+	return fmt.Sprintf("cluster:%v,namespace:%v,create configmap %v success",param.ClusterId,param.NameSpace,param.ConfigMapName),nil 
+}
+func UpdateConfigMap(c *gin.Context,param models.ParamCreateConfigmap) (string,error) {
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	err = client.UpdateConfigMap(param.NameSpace,param.ConfigMapName,param.KV)
+	if err != nil {
+		middleware.LogErr(c).Errorf("cluster:%v,namespace:%v,update configmap %v failed:%v\n",param.ClusterId,param.NameSpace,param.ConfigMapName,err)
+		return fmt.Sprintf("cluster:%v,namespace:%v,update configmap %v failed:%v\n",param.ClusterId,param.NameSpace,param.ConfigMapName,err),err 
+	}
+	return fmt.Sprintf("cluster:%v,namespace:%v,udpate configmap %v success",param.ClusterId,param.NameSpace,param.ConfigMapName),nil 
+}
+func CreateSecret(c *gin.Context,param models.ParamCreateSecret) (string,error) {
+	var (
+		err error 
+		secretmap map[string][]byte = make(map[string][]byte,0)
+	)
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	if param.IsEncrypt {
+		for k,v := range param.KV {
+			secretmap[k] = []byte(base64.StdEncoding.EncodeToString([]byte(v)))
+		}
+	}else{
+		for k,v := range param.KV {
+			secretmap[k] = []byte(v)
+		}
+	}
+	switch param.Type {
+	case "tlscert":
+		err = client.CreateSecretByTlsCert(param.NameSpace,param.SecretName,param.Cert,param.Key)
+	case "imagecert":
+		err = client.CreateSecretByImageCert(param.NameSpace,param.SecretName,param.ImageRepositoryUrl,param.RepositoryUser,param.RepositoryPassword)
+	case "opaque":
+		err = client.CreateSecretByOpaque(param.NameSpace,param.SecretName,secretmap)
+	default:
+		middleware.LogErr(c).Errorf("cluster:%v,namespace:%v,secret type:%v invalid",param.Type)
+		return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v invalid",param.Type),errors.New(fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v invalid",param.Type))
+	}
+	if err != nil {
+		middleware.LogErr(c).Errorf("cluster:%v,namespace:%v,secret type:%v, create secret %v failed:%v\n",param.ClusterId,param.NameSpace,param.Type,param.SecretName,err)
+		return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v, create secret %v failed:%v\n",param.ClusterId,param.NameSpace,param.Type,param.SecretName,err),err 
+	}
+	return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v, create secret %v success",param.ClusterId,param.NameSpace,param.Type,param.SecretName),nil 
+}

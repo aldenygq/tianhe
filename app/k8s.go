@@ -43,7 +43,60 @@ func DeleteResource(c *gin.Context) {
 	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
 	return
 }
+func CreateConfigMap(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	var param models.ParamCreateConfigmap
+	err := ctx.ValidateJson(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
 
+	msg,err := service.CreateConfigMap(c,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf("%v",err)
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
+	return
+}
+func UpdateConfigMap(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	var param models.ParamCreateConfigmap
+	err := ctx.ValidateJson(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
+
+	msg,err := service.UpdateConfigMap(c,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf("%v",err)
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
+	return
+}
+func CreateSecret(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	var param models.ParamCreateSecret
+	err := ctx.ValidateJson(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
+
+	msg,err := service.CreateSecret(c,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf("%v",err)
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
+	return
+}
 func WorkloadRollUpdate(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	var param models.ParamReourceInfo

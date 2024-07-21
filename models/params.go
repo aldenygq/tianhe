@@ -15,6 +15,26 @@ type ParamCreateNs struct {
 	ParamClusterId
 	ParamNameSpace
 }
+type ParamCreateConfigmap struct {
+	ParamClusterId
+	ParamNameSpace
+	ConfigMapName string `form:"configmap_name"  json:"configmap_name" binding:"required,min=0" label:"configmap名称"`
+	KV  map[string]string `form:"kv"  json:"kv" binding:"required,len=0" label:"k/v"`
+}
+type ParamCreateSecret struct {
+	ParamClusterId
+	ParamNameSpace
+	SecretName string `form:"secret_name"  json:"secret_name" binding:"required,min=0" label:"secret名称"`
+	Type string `form:"type"  json:"type" binding:"required,min=0" label:"secret 类型"`
+	KV  map[string]string `form:"kv"  json:"kv" binding:"omitempty,len=0" label:"k/v"`
+	IsEncrypt bool `form:"is_encrypt"  json:"is_encrypt" binding:"required,len=0" label:"是否加密"`
+	ImageRepositoryUrl string `form:"image_repository_url"  json:"image_repository_url" binding:"omitempty,min=0" label:"镜像 url"`
+	RepositoryUser string `form:"repository_user"  json:"repository_user" binding:"omitempty,min=0" label:"镜像仓库用户"`
+	RepositoryPassword string `form:"repository_password"  json:"repository_password" binding:"omitempty,min=0" label:"镜像仓库用户密码"`
+	Cert string `form:"cert"  json:"cert" binding:"omitempty,min=0" label:"证书"`
+	Key string `form:"key"  json:"key" binding:"omitempty,min=0" label:"证书key"`
+} 
+
 type ParamReourceYaml struct {
 	ParamClusterId
 	NameSpace string  `form:"namespace"  json:"namespace" binding:"omitempty,min=0" label:"namespace"`

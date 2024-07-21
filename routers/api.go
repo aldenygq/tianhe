@@ -126,6 +126,12 @@ func registerK8sRouter(k8s *gin.RouterGroup) {
 		k.POST("/deleteResource",app.DeleteResource)
 		//工作负载滚动重启，涉及：deployment/statefulset/daemonset 
 		k.POST("/workloadRollupdate",app.WorkloadRollUpdate)
+		//创建 configmap
+		k.POST("/createConfigMap",app.CreateConfigMap)
+		//更新 configmap
+		k.POST("/updateConfigMap",app.UpdateConfigMap)
+		//创建 secret
+		k.POST("/createSecret",app.CreateSecret)
 	}
 }
 //健康检测
