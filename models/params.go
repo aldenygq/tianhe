@@ -17,14 +17,42 @@ type ParamCreateNs struct {
 }
 type ParamReourceYaml struct {
 	ParamClusterId
-	ParamNode
 	NameSpace string  `form:"namespace"  json:"namespace" binding:"omitempty,min=0" label:"namespace"`
+	ResourceType string `form:"resource_type"  json:"resource_type" binding:"required,min=0" label:"资源类型"`
+	ResourceName string `form:"resource_name"  json:"resource_name" binding:"required,min=0" label:"资源名称"`
+}
+type ParamReourceList struct {
+	ParamClusterId
+	NameSpace string  `form:"namespace"  json:"namespace" binding:"omitempty,min=0" label:"namespace"`
+	ResourceType string `form:"resource_type"  json:"resource_type" binding:"required,min=0" label:"资源类型"`
+}
+type ParamReourceInfo struct {
+	ParamClusterId
+	NameSpace string  `form:"namespace"  json:"namespace" binding:"required,min=0" label:"namespace"`
 	ResourceType string `form:"resource_type"  json:"resource_type" binding:"required,min=0" label:"资源类型"`
 	ResourceName string `form:"resource_name"  json:"resource_name" binding:"required,min=0" label:"资源名称"`
 }
 type ParamNodeInfo struct {
 	ParamClusterId
 	ParamNode
+}
+/*
+type ParamRollUpdateDeployment struct {
+	ParamClusterId
+	ParamNameSpace
+	ParamDeployment
+}
+type ParamRollUpdateStatefulSet struct {
+	ParamClusterId
+	ParamNameSpace
+	ParamStatefulSet
+}
+*/
+type ParamDeployment struct {
+	Deployment string `form:"deployment"  json:"deployment" binding:"required,min=0" label:"deployment"`
+}
+type ParamStatefulSet struct {
+	StatefulSet string `form:"statefulset"  json:"statefulset" binding:"required,min=0" label:"statefulset"`
 }
 type ParamPatchNodeLabel struct {
 	ParamClusterId

@@ -95,23 +95,11 @@ func registerK8sRouter(k8s *gin.RouterGroup) {
 		//集群列表
 		k.GET("/list", app.ClusterList)
 		//创建 ns
-		k.POST("/createNs",app.CreateNs)
-		//ns信息
-		k.GET("/nsInfo",app.NsInfo)
-		//ns列表
-		k.GET("/nsList",app.NsList)
-		//pod 信息
-		k.GET("/podInfo",app.PodInfo)
-		//pod list
-		k.GET("/podList",app.PodList)
+		k.POST("/createNs",app.CreateNs) 
 		//查看 pod 事件
 		k.GET("/podEvent",app.PodEvent)
 		//查看 podlog
 		k.GET("/podLog",app.PodLog)
-		//node列表
-		k.GET("/nodeList",app.NodeList)
-		//获取 node 信息
-		k.GET("/nodeInfo",app.NodeInfo)
 		//node标签
 		k.GET("/nodeLable",app.NodeLable)
 		//node污点
@@ -126,8 +114,18 @@ func registerK8sRouter(k8s *gin.RouterGroup) {
 		k.POST("/patchNodeDrain",app.PatchNodeDrain)
 		//node下 pod 列表
 		k.GET("/podsInNode",app.PodsInNode)
+		//工作负载列表
+		k.GET("/resourceList",app.ResourceList)
 		//resource yaml
 		k.GET("/resourceYaml",app.ResourceYaml)
+		//resource info
+		k.GET("/resourceInfo",app.ResourceInfo)
+		//cluster event
+		k.GET("/clusterEvent",app.ClusterEvent)
+		//删除节点
+		k.POST("/deleteNode",app.DeleteNode)
+		//工作负载滚动重启，涉及：deployment/statefulset/daemonset 
+		k.POST("/workloadRollupdate",app.WorkloadRollUpdate)
 	}
 }
 //健康检测

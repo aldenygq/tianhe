@@ -56,63 +56,6 @@ func ClusterList(c *gin.Context) ([]*models.K8sCluster,string,error) {
 	return list,fmt.Sprintf("get k8s cluster list success"),nil
 } 
 
-func NsInfo(c *gin.Context, param models.ParamCreateNs) (interface{},string,error) {
-	client,err := GetK8sClientByClusterId(c,param.ClusterId)
-	if err != nil {
-		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
-		return nil,fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
-	}
-
-	nsinfo,err := client.NsInfo(param.NameSpace)
-	if err != nil {
-		middleware.LogErr(c).Errorf("get ns %v info by k8s cluster %v failed:%v\n",param.NameSpace,param.ClusterId,err)
-		return nil,fmt.Sprintf("get ns %v info by k8s cluster %v failed:%v\n",param.NameSpace,param.ClusterId,err),err 
-	}
-	return nsinfo,fmt.Sprintf("get ns %v info by k8s cluster %v sussess",param.NameSpace,param.ClusterId),nil
-}
-
-func NsList(c *gin.Context, param models.ParamClusterId) (interface{},string,error) {
-	client,err := GetK8sClientByClusterId(c,param.ClusterId)
-	if err != nil {
-		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
-		return nil,fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
-	}
-	nslist,err := client.NsList()
-	if err != nil {
-		middleware.LogErr(c).Errorf("get ns list info by k8s cluster %v failed:%v\n",param.ClusterId,err)
-		return nil,fmt.Sprintf("get ns list info by k8s cluster %v failed:%v\n",param.ClusterId,err),err 
-	}
-	return nslist,fmt.Sprintf("get ns list info by k8s cluster %v sussess",param.ClusterId),nil
-}
-
-func PodInfo(c *gin.Context, param models.ParamPodInfo) (interface{},string,error) {
-	client,err := GetK8sClientByClusterId(c,param.ClusterId)
-	if err != nil {
-		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
-		return nil,fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
-	}
-	pofinfo,err := client.PodInfo(param.NameSpace,param.PodName)
-	if err != nil {
-		middleware.LogErr(c).Errorf("get pod %v info by k8s cluster %v and ns %v failed:%v\n",param.PodName,param.ClusterId,param.NameSpace,err)
-		return nil,fmt.Sprintf("get pod %v info by k8s cluster %v and ns %v failed:%v\n",param.PodName,param.ClusterId,param.NameSpace,err),err 
-	}
-	return pofinfo,fmt.Sprintf("get pod %v info by k8s cluster %v and ns %v sussess",param.PodName,param.NameSpace,param.ClusterId),nil
-}
-
-func PodList(c *gin.Context, param models.ParamCreateNs) (interface{},string,error) {
-	client,err := GetK8sClientByClusterId(c,param.ClusterId)
-	if err != nil {
-		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
-		return nil,fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
-	}
-	pofinfo,err := client.PodList(param.NameSpace)
-	if err != nil {
-		middleware.LogErr(c).Errorf("get pod list by k8s cluster %v and ns %v failed:%v\n",param.ClusterId,param.NameSpace,err)
-		return nil,fmt.Sprintf("get pod list  by k8s cluster %v and ns %v failed:%v\n",param.ClusterId,param.NameSpace,err),err 
-	}
-	return pofinfo,fmt.Sprintf("get pod list by k8s cluster %v and ns %v sussess",param.NameSpace,param.ClusterId),nil
-}
-
 func PodEvent(c *gin.Context,param models.ParamPodInfo) (interface{},string,error) {
 	client,err := GetK8sClientByClusterId(c,param.ClusterId)
 	if err != nil {
@@ -140,36 +83,6 @@ func PodLog(c *gin.Context,param models.ParamPodInfo) (interface{},string,error)
 		return nil,fmt.Sprintf("get pod %v log by cluster %v and ns %v failed:%v\n",param.ParamPod,param.ClusterId,param.NameSpace,err),err 
     }
 	return log,fmt.Sprintf("get pod %v log by cluster %v and ns %v success",param.ParamPod,param.ClusterId,param.NameSpace),nil 
-}
-
-func NodeList(c *gin.Context,param models.ParamClusterId) (interface{},string,error) {
-	client,err := GetK8sClientByClusterId(c,param.ClusterId)
-	if err != nil {
-		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
-		return nil,fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
-	}
-	nodes,err := client.NodeList()
-	if err != nil {
-		middleware.LogErr(c).Errorf("get node list by cluster %v failed:%v\n",param.ClusterId,err)
-		return nil,fmt.Sprintf("get node list by cluster %v failed:%v\n",param.ClusterId,err),err 		
-	}
-
-	return nodes,fmt.Sprintf("get node list by cluster %v success",param.ClusterId),nil 
-}
-
-func NodeInfo(c *gin.Context,param models.ParamNodeInfo) (interface{},string,error) {
-	client,err := GetK8sClientByClusterId(c,param.ClusterId)
-	if err != nil {
-		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
-		return nil,fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
-	}
-	nodeinfo,err := client.NodeInfo(param.NodeName)
-	if err != nil {
-		middleware.LogErr(c).Errorf("get node %v info by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err)
-		return nil,fmt.Sprintf("get node %v info by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err),err 		
-	}
-
-	return nodeinfo,fmt.Sprintf("get node %v info by cluster %v success",param.NodeName,param.ClusterId),nil 
 }
 
 func NodeLable(c *gin.Context,param models.ParamNodeInfo) (interface{},string,error) {
@@ -273,7 +186,7 @@ func PodsInNode(c *gin.Context,param models.ParamNodeInfo) (interface{},string,e
 	return pods,fmt.Sprintf("get pod list by node %v and cluster %v success",param.NodeName,param.ClusterId),nil
 }
 
-func ParamReourceYaml(c *gin.Context,param models.ParamReourceYaml) (string,string,error) {
+func ReourceYaml(c *gin.Context,param models.ParamReourceYaml) (string,string,error) {
 	var (
 		err error
 		resource interface{}
@@ -289,7 +202,7 @@ func ParamReourceYaml(c *gin.Context,param models.ParamReourceYaml) (string,stri
 	case "pod":
 		resource,err = client.PodInfo(param.NameSpace,param.ResourceName)
 	case "deployment":
-		resource,err = client.DeplymentInfo(param.NameSpace,param.ResourceName) 
+		resource,err = client.DeploymentInfo(param.NameSpace,param.ResourceName) 
 	case "svc":
 		resource,err = client.SvcInfo(param.NameSpace,param.ResourceName) 
 	case "statefulset":
@@ -299,7 +212,7 @@ func ParamReourceYaml(c *gin.Context,param models.ParamReourceYaml) (string,stri
 	case "job":
 		resource,err = client.JobInfo(param.NameSpace,param.ResourceName) 
 	case "crobjob":
-		resource,err = client.CronjobInfo(param.NameSpace,param.ResourceName) 
+		resource,err = client.CronJobInfo(param.NameSpace,param.ResourceName) 
 	case "namespace":
 		resource,err = client.NsInfo(param.ResourceName) 
 	case "ingress":
@@ -331,8 +244,172 @@ func ParamReourceYaml(c *gin.Context,param models.ParamReourceYaml) (string,stri
 	*/
 	out,err := pkg.ToYAML(resource)
 	if err != nil {
-		middleware.LogErr(c).Errorf("node %v info to yaml failed:%v\n",param.NodeName,err)
-		return "",fmt.Sprintf("node %v info to yaml failed:%v\n",param.NodeName,err),err 
+		middleware.LogErr(c).Errorf("resource type %v,resource name:%v,to yaml failed:%v\n",param.ResourceType,param.ResourceName,err)
+		return "",fmt.Sprintf("resource type %v,resource name:%v,to yaml failed:%v\n",param.ResourceType,param.ResourceName,err),err 
 	}
-	return out,fmt.Sprintf("node %v info to yaml success",param.NodeName),nil
+	return out,fmt.Sprintf("resource type %v,resource name:%v,to yaml to yaml success",param.ResourceType,param.ResourceName),nil
+}
+
+func ReourceList(c *gin.Context,param models.ParamReourceList) (interface{},string,error) {
+	var (
+		err error
+		resources interface{}
+	) 
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return "",fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	switch param.ResourceType {
+	case "namespace":
+		resources,err = client.NsList() 
+	case "deployment":
+		resources,err = client.DeploymentList(param.NameSpace) 
+	case "node":
+		resources,err = client.NodeList() 
+	case "pod":
+		resources,err = client.PodList(param.NameSpace) 
+	case "svc":
+		resources,err = client.SvcList(param.NameSpace) 
+	case "statefulset":
+		resources,err = client.StatefulSetList(param.NameSpace) 
+	case "daemonset":
+		resources,err = client.DaemonSetList(param.NameSpace) 
+	case "job":
+		resources,err = client.JobList(param.NameSpace) 
+	case "cronjob":
+		resources,err = client.CronJobList(param.NameSpace) 
+	case "ingress":
+		resources,err = client.IngressList(param.NameSpace) 
+	case "configmap":
+		resources,err = client.ConfigMapList(param.NameSpace) 
+	case "secret":
+		resources,err = client.SecretList(param.NameSpace) 
+	case "pvc":
+		resources,err = client.PvcList(param.NameSpace) 
+	case "pv":
+		resources,err = client.PvList() 
+	case "storageclass":
+		resources,err = client.StorageClassList() 
+	default:
+		middleware.LogErr(c).Errorf("search resource type %v invalid",param.ResourceType)
+		return nil,fmt.Sprintf("search resource type %v invalid",param.ResourceType),errors.New(fmt.Sprintf("search resource type %v invalid",param.ResourceType))
+	}
+
+	if err != nil {
+		middleware.LogErr(c).Errorf("get resource type %v list by cluster %v failed:%v\n",param.ResourceType,param.ParamClusterId,err)
+		return nil,fmt.Sprintf("get resource type %v list by cluster %v failed:%v\n",param.ResourceType,param.ParamClusterId),err 
+	}
+	
+	return resources,fmt.Sprintf("get resource type %v list by cluster %v success",param.ResourceType,param.ParamClusterId),nil 
+}
+
+func ResourceInfo(c *gin.Context,param models.ParamReourceYaml) (interface{},string,error) {
+	var (
+		err error
+		resources interface{}
+	) 
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return "",fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	switch param.ResourceType {
+	case "namespace":
+		resources,err = client.NsInfo(param.ResourceName) 
+	case "deployment":
+		resources,err = client.DeploymentInfo(param.NameSpace,param.ResourceName) 
+	case "node":
+		resources,err = client.NodeInfo(param.ResourceName) 
+	case "pod":
+		resources,err = client.PodInfo(param.NameSpace,param.ResourceName) 
+	case "svc":
+		resources,err = client.SvcInfo(param.NameSpace,param.ResourceName) 
+	case "statefulset":
+		resources,err = client.StatefulSetInfo(param.NameSpace,param.ResourceName) 
+	case "daemonset":
+		resources,err = client.DaemonSetInfo(param.NameSpace,param.ResourceName) 
+	case "job":
+		resources,err = client.JobInfo(param.NameSpace,param.ResourceName) 
+	case "cronjob":
+		resources,err = client.CronJobInfo(param.NameSpace,param.ResourceName) 
+	case "ingress":
+		resources,err = client.IngressInfo(param.NameSpace,param.ResourceName) 
+	case "configmap":
+		resources,err = client.ConfigMapInfo(param.NameSpace,param.ResourceName) 
+	case "secret":
+		resources,err = client.SecretInfo(param.NameSpace,param.ResourceName) 
+	case "pvc":
+		resources,err = client.PvcInfo(param.NameSpace,param.ResourceName) 
+	case "pv":
+		resources,err = client.PvInfo(param.ResourceName) 
+	case "storageclass":
+		resources,err = client.StorageClassInfo(param.NameSpace,param.ResourceName) 
+	default:
+		middleware.LogErr(c).Errorf("search resource type %v invalid",param.ResourceType)
+		return nil,fmt.Sprintf("search resource type %v invalid",param.ResourceType),errors.New(fmt.Sprintf("search resource type %v invalid",param.ResourceType))
+	}
+
+	if err != nil {
+		middleware.LogErr(c).Errorf("get resource type %v list by cluster %v failed:%v\n",param.ResourceType,param.ParamClusterId,err)
+		return nil,fmt.Sprintf("get resource type %v list by cluster %v failed:%v\n",param.ResourceType,param.ParamClusterId),err 
+	}
+	
+	return resources,fmt.Sprintf("get resource type %v list by cluster %v success",param.ResourceType,param.ParamClusterId),nil 
+
+}
+func ClusterEvent(c *gin.Context,param models.ParamClusterId) (interface{},string,error) {
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return "",fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+
+	events,err := client.ClusterEvent()
+	if err != nil {
+		middleware.LogErr(c).Errorf("get cluster %v event failed:%v\n",param.ClusterId,err)
+		return "",fmt.Sprintf("get cluster %v event failed:%v\n",param.ClusterId,err),err 
+	}
+
+	return events,fmt.Sprintf("get cluster %v event success",param.ClusterId),nil 
+}
+
+func DeleteNode(c *gin.Context,param models.ParamNodeInfo) (string,error) {
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+
+	err = client.DeleteNode(param.NodeName)
+	if err != nil {
+		middleware.LogErr(c).Errorf("delete node %v by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err)
+		return fmt.Sprintf("delete node %v by cluster %v failed:%v\n",param.NodeName,param.ClusterId,err),err 
+	}
+	return fmt.Sprintf("delete node %v by cluster %v success",param.NodeName,param.ClusterId),nil 
+}
+
+func WorkloadRollUpdate(c *gin.Context,param models.ParamReourceInfo) (string,error) {
+	var err error 
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	switch param.ResourceType{
+	case "deployment":
+		err = client.DeployRollUpdate(param.ResourceName,param.NameSpace)
+	case "statefulset":
+		err = client.StatefulSetRollUpdate(param.ResourceName,param.NameSpace)
+	case "daemonset":
+		err = client.DaemonSetRollUpdate(param.ResourceName,param.NameSpace)
+	default:
+		middleware.LogErr(c).Errorf("resource type %v invalid",param.ResourceType)
+		return fmt.Sprintf(fmt.Sprintf("resource type %v invalid",param.ResourceType)),errors.New(fmt.Sprintf("resource type %v invalid",param.ResourceType))
+	}
+	if err != nil {
+		middleware.LogErr(c).Errorf("resoure name %v roll restart by cluster %v failed:%v\n",param.ResourceName,param.ClusterId,err)
+		return fmt.Sprintf("resoure name %v roll restart by cluster %v failed:%v\n",param.ResourceName,param.ClusterId,err),err 
+	}
+	return fmt.Sprintf("deployment %v roll restart by cluster %v success",param.ResourceName,param.ClusterId),nil 
 }
