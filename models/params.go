@@ -21,6 +21,10 @@ type ParamCreateConfigmap struct {
 	ConfigMapName string `form:"configmap_name"  json:"configmap_name" binding:"required,min=0" label:"configmap名称"`
 	KV  map[string]string `form:"kv"  json:"kv" binding:"required,len=0" label:"k/v"`
 }
+type ParamCreateResourceYaml struct {
+	ResourceType string `form:"resource_type"  json:"resource_type" binding:"required,min=0" label:"资源类型"`
+	ResourceYaml string `form:"resource_yaml"  json:"resource_yaml" binding:"required,min=0" label:"资源 yaml 文件"`
+}
 type ParamCreateSecret struct {
 	ParamClusterId
 	ParamNameSpace

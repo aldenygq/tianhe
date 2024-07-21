@@ -54,6 +54,21 @@ func (k *K8sClient) CreateNs(ns string) error {
     }
 	return nil 
 }
+func (k *K8sClient) UpdateSecretByOpaque(ns,secretname string,kv map[string][]byte) error {
+	defer k.CloseClient()
+	secret := &coreV1.Secret{
+        ObjectMeta: metaV1.ObjectMeta{
+            Name: secretname,
+        },
+        Type: "Opaque",
+        Data: kv,
+    }
+	_,err := k.Client.CoreV1().Secrets(ns).Update(context.TODO(), secret, metaV1.UpdateOptions{})
+    if err != nil {
+        return err 
+    }
+	return nil 
+}
 func (k *K8sClient) CreateSecretByOpaque(ns,secretname string,kv map[string][]byte) error {
 	defer k.CloseClient()
 	secret := &coreV1.Secret{
@@ -64,6 +79,26 @@ func (k *K8sClient) CreateSecretByOpaque(ns,secretname string,kv map[string][]by
         Data: kv,
     }
 	_,err := k.Client.CoreV1().Secrets(ns).Create(context.TODO(), secret, metaV1.CreateOptions{})
+    if err != nil {
+        return err 
+    }
+	return nil 
+}
+func (k *K8sClient) UpdateSecretByTlsCert(ns,secretname,cert,key string) error {
+	defer k.CloseClient()
+	data := map[string][]byte{
+        coreV1.TLSCertKey:       []byte(cert),
+        coreV1.TLSPrivateKeyKey: []byte(key),
+    }
+	secret := &coreV1.Secret{
+        ObjectMeta: metaV1.ObjectMeta{
+            Name:      secretname,
+            Namespace: ns,
+        },
+        Type: coreV1.SecretTypeTLS,
+        Data: data,
+    }
+	_, err := k.Client.CoreV1().Secrets(ns).Update(context.TODO(),secret,metaV1.UpdateOptions{})
     if err != nil {
         return err 
     }
@@ -87,6 +122,26 @@ func (k *K8sClient) CreateSecretByTlsCert(ns,secretname,cert,key string) error {
     if err != nil {
         return err 
     }
+	return nil 
+}
+func (k *K8sClient) UpdateSecretByImageCert(ns,secretname,url,user,password string) error {
+	defer k.CloseClient()
+
+	dockerConfigJson := fmt.Sprintf(`{"auths":{"%v":{"username":"%v","password":"%v"}}}"`,url,user,password)
+	secret := &coreV1.Secret{
+        ObjectMeta: metaV1.ObjectMeta{
+            Name: secretname,
+        },
+		Type: coreV1.SecretTypeDockerConfigJson,
+        Data: map[string][]byte{
+            ".dockerconfigjson": []byte(dockerConfigJson),
+		},
+    }
+	_, err := k.Client.CoreV1().Secrets(ns).Update(context.TODO(), secret, metaV1.UpdateOptions{})
+    if err != nil {
+        return err 
+    }
+ 
 	return nil 
 }
 func (k *K8sClient) CreateSecretByImageCert(ns,secretname,url,user,password string) error {

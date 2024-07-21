@@ -132,6 +132,10 @@ func registerK8sRouter(k8s *gin.RouterGroup) {
 		k.POST("/updateConfigMap",app.UpdateConfigMap)
 		//创建 secret
 		k.POST("/createSecret",app.CreateSecret)
+		//更新 secret
+		k.POST("/updateSecret",app.UpdateSecret)
+		//创建 resource yaml
+		k.POST("/createResourceByYaml",app.CreateResourceByYaml)
 	}
 }
 //健康检测

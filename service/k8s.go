@@ -10,6 +10,8 @@ import (
 	"errors"
 
 	"github.com/gin-gonic/gin"
+	appsV1 "k8s.io/api/apps/v1"
+	coreV1 "k8s.io/api/core/v1"
 )
 
 func RegisterCluster(c *gin.Context, param models.ParamRegisterCluster) (string,error) {
@@ -488,10 +490,22 @@ func CreateSecret(c *gin.Context,param models.ParamCreateSecret) (string,error) 
 	}
 	switch param.Type {
 	case "tlscert":
+		if param.Cert == "" || param.Key == "" {
+			middleware.LogErr(c).Errorf("cluster:%v,namespace:%v,secret type:%v,cert %v or key %v invalid",param.Cert,param.Key)
+			return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v,cert %v or key %v invalid",param.Cert,param.Key),errors.New(fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v,cert %v or key %v invalid",param.Cert,param.Key))
+		}
 		err = client.CreateSecretByTlsCert(param.NameSpace,param.SecretName,param.Cert,param.Key)
 	case "imagecert":
+		if param.ImageRepositoryUrl == "" || param.RepositoryUser == "" {
+			middleware.LogErr(c).Errorf("cluster:%v,namespace:%v,secret type:%v,url %v or user %v invalid",param.ImageRepositoryUrl,param.RepositoryUser)
+			return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v,url %v or user %v invalid",param.ImageRepositoryUrl,param.RepositoryUser),errors.New(fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v,url %v or user %v invalid",param.ImageRepositoryUrl,param.RepositoryUser))
+		} 
 		err = client.CreateSecretByImageCert(param.NameSpace,param.SecretName,param.ImageRepositoryUrl,param.RepositoryUser,param.RepositoryPassword)
 	case "opaque":
+		if secretmap == nil {
+			middleware.LogErr(c).Errorf("cluster:%v,namespace:%v,secret type:%v, secretmap %v invalid",secretmap)
+			return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v,secretmap %v invalid",secretmap),errors.New(fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v,secretmap %v invalid",secretmap))			
+		}
 		err = client.CreateSecretByOpaque(param.NameSpace,param.SecretName,secretmap)
 	default:
 		middleware.LogErr(c).Errorf("cluster:%v,namespace:%v,secret type:%v invalid",param.Type)
@@ -502,4 +516,78 @@ func CreateSecret(c *gin.Context,param models.ParamCreateSecret) (string,error) 
 		return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v, create secret %v failed:%v\n",param.ClusterId,param.NameSpace,param.Type,param.SecretName,err),err 
 	}
 	return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v, create secret %v success",param.ClusterId,param.NameSpace,param.Type,param.SecretName),nil 
+}
+func UpdateSecret(c *gin.Context,param models.ParamCreateSecret) (string,error) {
+	var (
+		err error 
+		secretmap map[string][]byte = make(map[string][]byte,0)
+	)
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	if param.IsEncrypt {
+		for k,v := range param.KV {
+			secretmap[k] = []byte(base64.StdEncoding.EncodeToString([]byte(v)))
+		}
+	}else{
+		for k,v := range param.KV {
+			secretmap[k] = []byte(v)
+		}
+	}
+	switch param.Type {
+	case "tlscert":
+		if param.Cert == "" || param.Key == "" {
+			middleware.LogErr(c).Errorf("cluster:%v,namespace:%v,secret type:%v,cert %v or key %v invalid",param.Cert,param.Key)
+			return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v,cert %v or key %v invalid",param.Cert,param.Key),errors.New(fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v,cert %v or key %v invalid",param.Cert,param.Key))
+		}
+		err = client.UpdateSecretByTlsCert(param.NameSpace,param.SecretName,param.Cert,param.Key)
+	case "imagecert":
+		if param.ImageRepositoryUrl == "" || param.RepositoryUser == "" {
+			middleware.LogErr(c).Errorf("cluster:%v,namespace:%v,secret type:%v,url %v or user %v invalid",param.ImageRepositoryUrl,param.RepositoryUser)
+			return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v,url %v or user %v invalid",param.ImageRepositoryUrl,param.RepositoryUser),errors.New(fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v,url %v or user %v invalid",param.ImageRepositoryUrl,param.RepositoryUser))
+		} 
+		err = client.UpdateSecretByImageCert(param.NameSpace,param.SecretName,param.ImageRepositoryUrl,param.RepositoryUser,param.RepositoryPassword)
+	case "opaque":
+		if secretmap == nil {
+			middleware.LogErr(c).Errorf("cluster:%v,namespace:%v,secret type:%v, secretmap %v invalid",secretmap)
+			return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v,secretmap %v invalid",secretmap),errors.New(fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v,secretmap %v invalid",secretmap))			
+		}
+		err = client.UpdateSecretByOpaque(param.NameSpace,param.SecretName,secretmap)
+	default:
+		middleware.LogErr(c).Errorf("cluster:%v,namespace:%v,secret type:%v invalid",param.Type)
+		return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v invalid",param.Type),errors.New(fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v invalid",param.Type))
+	}
+	if err != nil {
+		middleware.LogErr(c).Errorf("cluster:%v,namespace:%v,secret type:%v, update secret %v failed:%v\n",param.ClusterId,param.NameSpace,param.Type,param.SecretName,err)
+		return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v, update secret %v failed:%v\n",param.ClusterId,param.NameSpace,param.Type,param.SecretName,err),err 
+	}
+	return fmt.Sprintf("cluster:%v,namespace:%v,secret type:%v, update secret %v success",param.ClusterId,param.NameSpace,param.Type,param.SecretName),nil 
+}
+
+func CreateResourceByYaml(c,param models.ParamCreateResourceYaml) (string,error ) {
+	//var deployment appsV1.Deployment
+	var err error 
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	switch param.ResourceType{
+	case "namespace":
+		var namespace coreV1.Namespace
+		err = pkg.CheckYamlFormat(param.ResourceYaml,namespace)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+
+	}
+	err := client.CreateResourceByYaml()
+	if err != nil {
+		middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+		return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+	}
+	return "",nil 
 }

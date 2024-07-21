@@ -97,6 +97,40 @@ func CreateSecret(c *gin.Context) {
 	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
 	return
 }
+func UpdateSecret(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	var param models.ParamCreateSecret
+	err := ctx.ValidateJson(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
+	msg,err := service.UpdateSecret(c,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf("%v",err)
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
+	return
+}
+func CreateResourceByYaml(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	var param models.ParamCreateResourceYaml
+	err := ctx.ValidateJson(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
+	msg,err := service.CreateResourceByYaml(c,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf("%v",err))
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
+	return
+}
 func WorkloadRollUpdate(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	var param models.ParamReourceInfo
