@@ -601,6 +601,38 @@ func CreateResourceByYaml(c *gin.Context,param models.ParamCreateResourceYaml) (
 			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
 		}
 		resource = daemonset
+	case "job":
+		var job batchV1.Job
+		err = pkg.CheckYamlFormat(param.ResourceYaml,job)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = job
+	case "cronjob":
+		var cronjob batchV1.CronJob
+		err = pkg.CheckYamlFormat(param.ResourceYaml,cronjob)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = cronjob
+	case "pod":
+		var pod coreV1.Pod
+		err = pkg.CheckYamlFormat(param.ResourceYaml,pod)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = pod
+	case "svc":
+		var svc coreV1.Service
+		err = pkg.CheckYamlFormat(param.ResourceYaml,pod)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = svc
 	}
 	err = client.CreateResourceByYaml(resource)
 	if err != nil {
