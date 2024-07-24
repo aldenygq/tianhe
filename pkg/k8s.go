@@ -842,6 +842,8 @@ func (k *K8sClient) CreateResourceByYaml(obj interface{}) error {
 	switch obj.(type) {
 	case coreV1.Namespace:
 		_,err = k.Client.CoreV1().Namespaces().Create(context.TODO(), obj.(*coreV1.Namespace),metaV1.CreateOptions{})
+	case appsV1.Deployment:
+		_,err = k.Client.CoreV1().Namespaces().Create(context.TODO(), obj.(*coreV1.Namespace),metaV1.CreateOptions{})
 	}
 	if err != nil {
 		return err
