@@ -593,6 +593,14 @@ func CreateResourceByYaml(c *gin.Context,param models.ParamCreateResourceYaml) (
 			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
 		}
 		resource = deployment
+	case "statefulset":
+		var statefulset appsV1.StatefulSet
+		err = pkg.CheckYamlFormat(param.ResourceYaml,statefulset)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = statefulset
 	case "daemonset":
 		var daemonset appsV1.DaemonSet
 		err = pkg.CheckYamlFormat(param.ResourceYaml,daemonset)
@@ -627,12 +635,60 @@ func CreateResourceByYaml(c *gin.Context,param models.ParamCreateResourceYaml) (
 		resource = pod
 	case "svc":
 		var svc coreV1.Service
-		err = pkg.CheckYamlFormat(param.ResourceYaml,pod)
+		err = pkg.CheckYamlFormat(param.ResourceYaml,svc)
 		if err != nil {
 			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
 			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
 		}
 		resource = svc
+	case "ingress":
+		var ingress networkV1.Ingress
+		err = pkg.CheckYamlFormat(param.ResourceYaml,ingress)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = ingress
+	case "configmap":
+		var configmap coreV1.ConfigMap
+		err = pkg.CheckYamlFormat(param.ResourceYaml,configmap)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = configmap
+	case "secret":
+		var secret coreV1.Secret
+		err = pkg.CheckYamlFormat(param.ResourceYaml,secret)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = secret
+	case "pvc":
+		var pvc coreV1.PersistentVolumeClaim
+		err = pkg.CheckYamlFormat(param.ResourceYaml,pvc)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = pvc
+	case "pv":
+		var pv coreV1.PersistentVolume
+		err = pkg.CheckYamlFormat(param.ResourceYaml,pv)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = pv
+	case "storageclass":
+		var storageclass coreV1.StorageClass
+		err = pkg.CheckYamlFormat(param.ResourceYaml,storageclass)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = storageclass
 	}
 	err = client.CreateResourceByYaml(resource)
 	if err != nil {
