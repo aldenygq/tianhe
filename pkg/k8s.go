@@ -843,7 +843,15 @@ func (k *K8sClient) CreateResourceByYaml(obj interface{}) error {
 	case coreV1.Namespace:
 		_,err = k.Client.CoreV1().Namespaces().Create(context.TODO(), obj.(*coreV1.Namespace),metaV1.CreateOptions{})
 	case appsV1.Deployment:
-		_,err = k.Client.CoreV1().Namespaces().Create(context.TODO(), obj.(*coreV1.Namespace),metaV1.CreateOptions{})
+		_,err = k.Client.CoreV1().Namespaces().Create(context.TODO(), obj.(*appsV1.Deployment),metaV1.CreateOptions{})
+	case appsV1.StatefulSet:
+		_,err = k.Client.CoreV1().Namespaces().Create(context.TODO(), obj.(*appsV1.StatefulSet),metaV1.CreateOptions{})
+	case appsV1.DaemonSet:
+		_,err = k.Client.CoreV1().Namespaces().Create(context.TODO(), obj.(*appsV1.DaemonSet),metaV1.CreateOptions{})
+	case batchV1.Job:
+		_,err = k.Client.CoreV1().Namespaces().Create(context.TODO(), obj.(*batchV1.Job),metaV1.CreateOptions{})
+	case batchV1.CronJob:
+		_,err = k.Client.CoreV1().Namespaces().Create(context.TODO(), obj.(*batchV1.CronJob),metaV1.CreateOptions{})
 	}
 	if err != nil {
 		return err
