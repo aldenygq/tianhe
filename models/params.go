@@ -106,7 +106,6 @@ type ParamPod struct {
 type ParamNode struct {
 	NodeName string  `form:"nodename"  json:"nodename" binding:"required,min=0" label:"nodename"`
 }
-
 type ParamPodInfo struct {
 	ParamClusterId
 	ParamNameSpace

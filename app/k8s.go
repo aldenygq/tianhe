@@ -217,18 +217,18 @@ func ClusterList(c *gin.Context) {
 	return
 }
 
-func PodEvent(c *gin.Context) {
+func ResourceEvent(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	
-	var param models.ParamPodInfo
+	var param models.ParamReourceInfo
 	err := ctx.Validate(&param)
 	if err != nil {
 		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
 		return
 	}
-	data,msg,err := service.PodEvent(ctx.Ctx,param)
+	data,msg,err := service.ResourceEvent(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get pod %v event by cluster %v and ns %v failed:%v\n",param.PodName,param.ClusterId,param.NameSpace,err))
+		middleware.LogErr(ctx.Ctx).Errorf("%v",err)
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}

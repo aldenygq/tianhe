@@ -97,7 +97,8 @@ func registerK8sRouter(k8s *gin.RouterGroup) {
 		//创建 ns
 		k.POST("/createNs",app.CreateNs) 
 		//查看 pod 事件
-		k.GET("/podEvent",app.PodEvent)
+		//k.GET("/resourceEvent",app.PodEvent)
+		k.GET("/resourceEvent",app.ResourceEvent)
 		//查看 podlog
 		k.GET("/podLog",app.PodLog)
 		//node标签

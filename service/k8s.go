@@ -12,6 +12,9 @@ import (
 	"github.com/gin-gonic/gin"
 	appsV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
+	batchV1 "k8s.io/api/batch/v1"
+	networkV1 "k8s.io/api/networking/v1"
+	storageV1 "k8s.io/api/storage/v1"
 )
 
 func RegisterCluster(c *gin.Context, param models.ParamRegisterCluster) (string,error) {
@@ -58,19 +61,28 @@ func ClusterList(c *gin.Context) ([]*models.K8sCluster,string,error) {
 	return list,fmt.Sprintf("get k8s cluster list success"),nil
 } 
 
-func PodEvent(c *gin.Context,param models.ParamPodInfo) (interface{},string,error) {
+func ResourceEvent(c *gin.Context,param models.ParamReourceInfo) (interface{},string,error) {
+	var (
+		filter string 
+	)
 	client,err := GetK8sClientByClusterId(c,param.ClusterId)
 	if err != nil {
 		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
 		return nil,fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
 	}
-	event,err := client.Event(param.NameSpace,param.PodName)
+	switch param.ResourceType{
+	case "pod":
+		filter = fmt.Sprintf("involvedObject.name=%s", param.ResourceName)
+	case "node":
+		
+	}
+	event,err := client.Event(param.NameSpace,filter)
     if err != nil {
-		middleware.LogErr(c).Errorf("get pod %v event by cluster %v and ns %v failed:%v\n",param.ParamPod,param.ParamClusterId,param.NameSpace,err)
-		return nil,fmt.Sprintf("get pod %v event by cluster %v and ns %v failed:%v\n",param.ParamPod,param.ParamClusterId,param.NameSpace,err),err 
+		middleware.LogErr(c).Errorf("get resource type %v resource %v event by cluster %v and ns %v failed:%v\n",param.ResourceType,param.ResourceName,param.ParamClusterId,param.NameSpace,err)
+		return nil,fmt.Sprintf("get resource type %v resource %v event by cluster %v and ns %v failed:%v\n",param.ResourceType,param.ResourceName,param.ParamClusterId,param.NameSpace,err),err 
     }
 
-	return event,fmt.Sprintf("get pod %v event by cluster %v and ns %v success",param.ParamPod,param.ParamClusterId,param.NameSpace),nil 
+	return event,fmt.Sprintf("get resource type %v resource %v event  by cluster %v and ns %v success",param.ResourceType,param.ResourceName,param.ParamClusterId,param.NameSpace),nil 
 }
 
 func PodLog(c *gin.Context,param models.ParamPodInfo) (interface{},string,error) {
@@ -682,18 +694,21 @@ func CreateResourceByYaml(c *gin.Context,param models.ParamCreateResourceYaml) (
 		}
 		resource = pv
 	case "storageclass":
-		var storageclass coreV1.StorageClass
+		var storageclass storageV1.StorageClass
 		err = pkg.CheckYamlFormat(param.ResourceYaml,storageclass)
 		if err != nil {
 			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
 			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
 		}
 		resource = storageclass
+	default:
+		middleware.LogErr(c).Errorf("resource type %v invalid",param.ResourceType)
+		return fmt.Sprintf("resource type %v invalid",param.ResourceType),errors.New(fmt.Sprintf("resource type %v invalid",param.ResourceType))
 	}
 	err = client.CreateResourceByYaml(resource)
 	if err != nil {
 		middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
-		return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		return fmt.Sprintf("resource yaml format invalid:%v\n",err),err
 	}
 	return "",nil 
 }
