@@ -64,6 +64,8 @@ func ClusterList(c *gin.Context) ([]*models.K8sCluster,string,error) {
 func ResourceEvent(c *gin.Context,param models.ParamReourceInfo) (interface{},string,error) {
 	var (
 		filter string 
+		event interface{}
+		err error 
 	)
 	client,err := GetK8sClientByClusterId(c,param.ClusterId)
 	if err != nil {
@@ -74,9 +76,12 @@ func ResourceEvent(c *gin.Context,param models.ParamReourceInfo) (interface{},st
 	case "pod":
 		filter = fmt.Sprintf("involvedObject.name=%s", param.ResourceName)
 	case "node":
-		
+		filter = fmt.Sprintf("involvedObject.kind=Node,involvedObject.name=%s", param.ResourceName)
+	default:
+		middleware.LogErr(c).Errorf("resource type %v invalid",param.ResourceType)
+		return nil,fmt.Sprintf("resource type %v invalid",param.ResourceType),errors.New(fmt.Sprintf("resource type %v invalid",param.ResourceType))
 	}
-	event,err := client.Event(param.NameSpace,filter)
+	event,err = client.Event(param.NameSpace,filter)
     if err != nil {
 		middleware.LogErr(c).Errorf("get resource type %v resource %v event by cluster %v and ns %v failed:%v\n",param.ResourceType,param.ResourceName,param.ParamClusterId,param.NameSpace,err)
 		return nil,fmt.Sprintf("get resource type %v resource %v event by cluster %v and ns %v failed:%v\n",param.ResourceType,param.ResourceName,param.ParamClusterId,param.NameSpace,err),err 
