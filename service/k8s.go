@@ -16,7 +16,20 @@ import (
 	networkV1 "k8s.io/api/networking/v1"
 	storageV1 "k8s.io/api/storage/v1"
 )
+func ClusterUserList(c *gin.Context, param models.ParamClusterId) (interface{},string,error) {
+	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+	if err != nil {
+		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+		return fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+	}
+	users,err := client.ClusterUsers()
+	if err != nil {
+		middleware.LogErr(c).Errorf("get user list by cluster %v failed:%v\n",param.ClusterId,err)
+		return nil,fmt.Sprintf("get user list by cluster %v failed:%v\n",param.ClusterId,err),err 		
+	}
 
+	return taint,fmt.Sprintf("get user list by cluster %v success",param.ClusterId),nil 
+}
 func RegisterCluster(c *gin.Context, param models.ParamRegisterCluster) (string,error) {
 	var cluster *models.K8sCluster = &models.K8sCluster{}
 	cluster.ClusterId = param.ClusterId
