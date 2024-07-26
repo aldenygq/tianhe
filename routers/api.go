@@ -137,6 +137,8 @@ func registerK8sRouter(k8s *gin.RouterGroup) {
 		k.POST("/updateSecret",app.UpdateSecret)
 		//创建 resource yaml
 		k.POST("/createResourceByYaml",app.CreateResourceByYaml)
+		//用户列表
+		k.POST("/userList",app.ClusterUserList)
 	}
 }
 //健康检测
