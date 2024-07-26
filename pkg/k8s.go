@@ -69,6 +69,15 @@ func (k *K8sClient) UpdateSecretByOpaque(ns,secretname string,kv map[string][]by
     }
 	return nil 
 }
+func (k *K8sClient) ClusterUsers() (error) {
+	defer k.CloseClient()
+	// 获取用户(ServiceAccount)列表
+    	users, err := k.Client.Users().List(context.TODO(), metav1.ListOptions{})
+    	if err != nil {
+        	return err 
+    	}
+	return users,nil 
+}
 func (k *K8sClient) CreateSecretByOpaque(ns,secretname string,kv map[string][]byte) error {
 	defer k.CloseClient()
 	secret := &coreV1.Secret{
