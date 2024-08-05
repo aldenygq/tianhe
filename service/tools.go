@@ -4,12 +4,14 @@ import (
 	"tianhe/pkg"
 	"tianhe/models"
 	"tianhe/middleware"
-	"time"
-	"unicode"
+	//"time"
+	//"unicode"
 
 	"github.com/gin-gonic/gin"
+	"k8s.io/client-go/tools/clientcmd"
+    //"k8s.io/client-go/tools/clientcmd/api"
 )
-
+/*
 func CompareTwoDay(day1,day2 string) int64{
 	// 创建两个日期
 	d1, _ := time.Parse("2006-01-02", day1)
@@ -40,6 +42,7 @@ func IsContainChinese(str string) bool {
 	}
 	return false
 }
+*/
 
 
 func GetK8sClientByClusterId(c *gin.Context,clusterid string) (*pkg.K8sClient,error) {
@@ -58,4 +61,28 @@ func GetK8sClientByClusterId(c *gin.Context,clusterid string) (*pkg.K8sClient,er
 		return nil,err 
 	}
 	return client,nil 
+}
+
+func GetUserByKubeconfig(c *gin.Context,kubeconfig string) (string,error) {
+	// 使用clientcmd.RESTConfigFromKubeConfig将kubeconfig字符串解析为api.Config结构
+	config, err := clientcmd.Load([]byte(kubeconfig))
+	if err != nil {
+		middleware.LogErr(c).Errorf("load kubeconfig failed :%v\n",err)
+		return "",err 
+	}
+
+	// 获取当前上下文的用户信息
+	currentContext := config.CurrentContext
+	ctx, ok := config.Contexts[currentContext]
+	if !ok {
+		middleware.LogErr(c).Errorf("get kubeconfig context info failed :%v\n",err)
+		return "",err 
+	}
+	user, ok := config.AuthInfos[ctx.AuthInfo]
+    if !ok {
+		middleware.LogErr(c).Errorf("get kubeconfig user  info failed :%v\n",err)
+		return "",err 
+    }
+
+	return user.Username,nil 
 }

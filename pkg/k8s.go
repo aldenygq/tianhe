@@ -18,6 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	rbacV1 "k8s.io/api/rbac/v1"
 )
 
 type K8sClient struct {
@@ -69,15 +70,17 @@ func (k *K8sClient) UpdateSecretByOpaque(ns,secretname string,kv map[string][]by
     }
 	return nil 
 }
+/*
 func (k *K8sClient) ClusterUsers() (error) {
 	defer k.CloseClient()
 	// 获取用户(ServiceAccount)列表
-    	users, err := k.Client.Users().List(context.TODO(), metav1.ListOptions{})
-    	if err != nil {
-        	return err 
-    	}
+    users, err := k.Client.RbacV1().Users().List(context.TODO(), metaV1.ListOptions{})
+    if err != nil {
+       	return err 
+    }
 	return users,nil 
 }
+*/
 func (k *K8sClient) CreateSecretByOpaque(ns,secretname string,kv map[string][]byte) error {
 	defer k.CloseClient()
 	secret := &coreV1.Secret{
@@ -181,6 +184,14 @@ func (k *K8sClient) NsInfo(ns string) (*coreV1.Namespace,error) {
 		return namespaceInfo,err
 	}
 	return namespaceInfo,nil
+}
+func (k *K8sClient) RoleList(ns string) (*rbacV1.RoleList,error) {
+	defer k.CloseClient()
+	roles,err := k.Client.RbacV1().Roles(ns).List(context.TODO(),metaV1.ListOptions{})
+	if err != nil {
+		return nil,err 
+	}
+	return roles,nil 
 }
 func (k *K8sClient) NsList() (*coreV1.NamespaceList,error) {
 	defer k.CloseClient()
@@ -432,7 +443,14 @@ func (k *K8sClient) NodeInfo(nodename string) (*coreV1.Node,error) {
 	}
 	return node,nil 
 }
-
+func (k *K8sClient) RoleInfo(ns,role string) (*rbacV1.Role,error) {
+	defer k.CloseClient()
+	roleinfo,err := k.Client.RbacV1().Roles(ns).Get(context.TODO(),role,metaV1.GetOptions{})
+	if err != nil {
+		return nil,err 
+	} 
+	return roleinfo,nil 
+}
 func (k *K8sClient) NodeLable(nodename string) (map[string]string,error) {
 	defer k.CloseClient()
 	node,err := k.Client.CoreV1().Nodes().Get(context.TODO(),nodename,metaV1.GetOptions{})
@@ -587,6 +605,26 @@ func (k *K8sClient) PatchNodeDrain(nodename string) error {
     }
 	return nil 
 }
+func (k *K8sClient) DeleteRole(ns,role string) error {
+	defer k.CloseClient()
+	err := k.Client.RbacV1().Roles(ns).Delete(context.TODO(),role,metaV1.DeleteOptions{})
+	if err != nil {
+		return err 
+	}
+	return nil 
+}
+func (k *K8sClient) DeleteServiceAccount(ns,serviceaccount string) error {
+	defer k.CloseClient()
+	deletePolicy := metaV1.DeletePropagationForeground
+	err := k.Client.CoreV1().ServiceAccounts(ns).Delete(context.TODO(),serviceaccount,metaV1.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
+	})
+	if err != nil {
+		return err 
+	}
+	return nil 
+}
+
 func (k *K8sClient) DeletePod(ns,podname string) error {
 	defer k.CloseClient()
 	err := k.Client.CoreV1().Pods(ns).Delete(context.TODO(), podname, metaV1.DeleteOptions{GracePeriodSeconds: Int64ToPointInt64(0)})
@@ -717,6 +755,14 @@ func (k *K8sClient) PvcInfo(ns,pvcname string) (*coreV1.PersistentVolumeClaim,er
     }
 	return pvcinfo,nil
 }
+func (k *K8sClient) ServiceAccountInfo(ns,serviceaccount string) (*coreV1.ServiceAccount,error) {
+	defer k.CloseClient()
+	serviceaccountinfo,err := k.Client.CoreV1().ServiceAccounts(ns).Get(context.Background(),serviceaccount,metaV1.GetOptions{})
+	if err != nil {
+        return nil,err 
+    }
+	return serviceaccountinfo,nil
+}
 func (k *K8sClient) StorageClassInfo(ns,name string) (*storageV1.StorageClass,error) {
 	defer k.CloseClient()
 	storageClass, err := k.Client.StorageV1().StorageClasses().Get(context.TODO(), name, metaV1.GetOptions{})
@@ -837,6 +883,14 @@ func (k *K8sClient) CreateConfigMap(ns,configmap string,kv map[string]string) er
         return err
     }
 	return nil 
+} 
+func (k *K8sClient) ServiceAccountList() (*coreV1.ServiceAccountList,error) {
+	defer k.CloseClient()
+	serviceaccounts,err := k.Client.CoreV1().ServiceAccounts("").List(context.TODO(),metaV1.ListOptions{})
+	if err != nil {
+		return nil,err 
+	}
+	return serviceaccounts,nil 
 }
 func (k *K8sClient) UpdateConfigMap(ns,configmap string,kv map[string]string) error {
 	defer k.CloseClient()
@@ -882,6 +936,8 @@ func (k *K8sClient) CreateResourceByYaml(obj interface{}) error {
 		_,err = k.Client.CoreV1().PersistentVolumes().Create(context.TODO(), obj.(*coreV1.PersistentVolume),metaV1.CreateOptions{})
 	case storageV1.StorageClass:
 		_,err = k.Client.StorageV1().StorageClasses().Create(context.TODO(), obj.(*storageV1.StorageClass),metaV1.CreateOptions{})
+	case coreV1.ServiceAccount:
+		_,err = k.Client.CoreV1().ServiceAccounts("").Create(context.TODO(), obj.(*coreV1.ServiceAccount),metaV1.CreateOptions{})
 	default:
 		return errors.New("resource type invaild")
 	}

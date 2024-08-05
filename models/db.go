@@ -504,12 +504,14 @@ func (h *Host) GetHostById() error {
 type K8sCluster struct {
 	Ctime    int64  `gorm:"column:ctime;type:int(11)" json:"ctime" description:"创建时间"`
 	Id       int64  `gorm:"column:id;PRIMARY_KEY;type:int(10)" json:"id"  description:"主键id"`
-	ClusterId string `gorm:"column:cluster_id;type:varchar(64);unique" json:"cluster_id"  description:"集群id"`
+	ClusterId string `gorm:"column:cluster_id;type:varchar(64)" json:"cluster_id"  description:"集群id"`
 	Mtime    int64  `gorm:"column:mtime;type:int(11)" json:"mtime" description:"修改时间"`
-	ClusterName   string `gorm:"column:cluster_name;type:varchar(256);unique" json:"cluster_name" description:"集群名称"`
+	ClusterName   string `gorm:"column:cluster_name;type:varchar(256)" json:"cluster_name" description:"集群名称"`
 	Kubeconfig string `gorm:"column:kubeconfig;type:text;unique" json:"kubeconfig" description:"认证配置"`
+	ClusterUser string `gorm:"column:cluster_user;type:varchar(256)" json:"cluster_user" description:"集群用户"`
 	Creator string `gorm:"column:creator;type:varchar(128)" json:"creator" description:"创建者"`
 	Env string `gorm:"column:env;type:varchar(16)" json:"env" description:"环境"`
+	Status int64 `gorm:"column:status;type:int(11)" json:"status" description:状态：1(有效)/0(失效)"`
 }
 
 func (k *K8sCluster) Create() error {
@@ -574,3 +576,11 @@ func (k *K8sCluster) List() ([]*K8sCluster,error) {
 	}
 	return list,nil
 } 
+func (k *K8sCluster) ClusterUsers() ([]string,error) {
+	var users []string = make([]string,0)
+	err := middleware.Sql.Table(K8SCLUSTER).Select("user").Where("cluster_id = ?",k.ClusterId).Scan(&users).Error
+	if err != nil {
+		return nil,err
+	}
+	return users,nil
+}

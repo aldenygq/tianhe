@@ -8,6 +8,7 @@ import (
 	"tianhe/pkg"
 	"time"
 	"errors"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	appsV1 "k8s.io/api/apps/v1"
@@ -16,31 +17,82 @@ import (
 	networkV1 "k8s.io/api/networking/v1"
 	storageV1 "k8s.io/api/storage/v1"
 )
-func ClusterUserList(c *gin.Context, param models.ParamClusterId) (interface{},string,error) {
+/*
+func ServiceAccount(c *gin.Context, param models.ParamClusterId) (interface{},string,error) {
 	client,err := GetK8sClientByClusterId(c,param.ClusterId)
 	if err != nil {
 		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
-		return fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+		return nil,fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
 	}
-	users,err := client.ClusterUsers()
+	label,err := client.ServiceAccount()
+	if err != nil {
+		middleware.LogErr(c).Errorf("get service account by cluster %v failed:%v\n",param.ClusterId,err)
+		return nil,fmt.Sprintf("get service account by cluster %v failed:%v\n",param.ClusterId,err),err 		
+	}
+
+	return label,fmt.Sprintf("get service account by cluster %v success",param.ClusterId),nil 
+}
+*/
+func GetKubeconfigExpire(c *gin.Context, param models.ParamClusterId) (int64,string,error) {
+	var cluster *models.K8sCluster = &models.K8sCluster{}
+	var timestamp int64 
+	cluster.ClusterId = param.ClusterId
+	err := cluster.GetClusterById()
+	if err != nil {
+		middleware.LogErr(c).Errorf("get cluster info by id %v failed:%v\n",param.ClusterId,err)
+		return timestamp,fmt.Sprintf("get cluster info by id failed:%v\n",err),err 
+	}
+	// 解码Base64字符串
+	decodedBytes, err := base64.StdEncoding.DecodeString(cluster.Kubeconfig)
+	if err != nil {
+		middleware.LogErr(c).Errorf("decode base64 kubeconfig info by failed:%v\n",err)
+		return timestamp,fmt.Sprintf("decode base64 kubeconfig info by failed:%v\n",err),err 
+	}
+	cmd := fmt.Sprintf("echo %v | grep client-certificate-data | awk -F ' ' '{print $2}' |base64 -d| openssl x509 -text -noout -dates | grep After |awk -F '=' '{print $2}' | grep -v '^$'",string(decodedBytes))
+    content,err := pkg.RunCmd(cmd)
+	if err != nil {
+        middleware.LogErr(c).Errorf("run command failed:%v\n",err)
+        return timestamp,fmt.Sprintf("run command failed:%v\n",err),err 
+    }
+    t, err := time.Parse("Jan 02 15:04:05 2006 GMT", strings.TrimSuffix(content, "\x0a"))
+    if err != nil {
+        middleware.LogErr(c).Errorf("parse time failed:%v\n",err)
+        return timestamp,fmt.Sprintf("parse time failed:%v\n",err),err 
+    }
+    timestamp = t.Unix()
+    //tm := time.Unix(timestamp,0)
+    //fmt.Printf("time:%v\n",tm)
+    //fmt.Println(tm.Format("2006-01-02 15:04:05"))
+	return timestamp,fmt.Sprintf("get time stamp success"),nil 
+}
+func ClusterUserList(c *gin.Context, param models.ParamClusterId) (interface{},string,error) {
+	var cluster *models.K8sCluster = &models.K8sCluster{}
+	cluster.ClusterId = param.ClusterId
+	users,err := cluster.ClusterUsers()
 	if err != nil {
 		middleware.LogErr(c).Errorf("get user list by cluster %v failed:%v\n",param.ClusterId,err)
 		return nil,fmt.Sprintf("get user list by cluster %v failed:%v\n",param.ClusterId,err),err 		
 	}
 
-	return taint,fmt.Sprintf("get user list by cluster %v success",param.ClusterId),nil 
+	return users,fmt.Sprintf("get user list by cluster %v success",param.ClusterId),nil 
 }
 func RegisterCluster(c *gin.Context, param models.ParamRegisterCluster) (string,error) {
 	var cluster *models.K8sCluster = &models.K8sCluster{}
+	username,err := GetUserByKubeconfig(c,param.Kubeconfig)
+	if err != nil {
+		middleware.LogErr(c).Errorf("get cluster %v user info by kubeconfig failed:%v\n",param.ClusterName,err)
+		return fmt.Sprintf("get cluster %v user info by kubeconfig failed:%v\n",param.ClusterName,err),err 
+	}
 	cluster.ClusterId = param.ClusterId
 	cluster.ClusterName = param.ClusterName
 	cluster.Creator = param.Creator
 	cluster.Ctime = time.Now().Unix()
 	cluster.Env = param.Env
 	cluster.Kubeconfig = base64.StdEncoding.EncodeToString([]byte(param.Kubeconfig))
+	cluster.ClusterUser = username
+	cluster.Status= 1
 
-
-	err := cluster.Create()
+	err = cluster.Create()
 	if err != nil {
 		middleware.LogErr(c).Errorf("register k8s cluster %v failed:%v\n",param.ClusterName,err)
 		return fmt.Sprintf("register k8s cluster %v failed:%v\n",param.ClusterName,err),err 
@@ -259,6 +311,8 @@ func ReourceYaml(c *gin.Context,param models.ParamReourceYaml) (string,string,er
 		resource,err = client.PvInfo(param.ResourceName)
 	case "storageclass":
 		resource,err = client.StorageClassInfo(param.NameSpace,param.ResourceName)
+	case "serviceaccount":
+		resource,err = client.ServiceAccountInfo(param.NameSpace,param.ResourceName)
 	default:
 		middleware.LogErr(c).Errorf("resource type:%v invalid",param.ResourceType)
 		return "",fmt.Sprintf("resource type:%v invalid",param.ResourceType),errors.New(fmt.Sprintf("resource type:%v invalid",param.ResourceType))
@@ -323,6 +377,10 @@ func ReourceList(c *gin.Context,param models.ParamReourceList) (interface{},stri
 		resources,err = client.PvList() 
 	case "storageclass":
 		resources,err = client.StorageClassList() 
+	case "serviceaccount":
+		resources,err = client.ServiceAccountList() 
+	case "role":
+		resources,err = client.RoleList(param.NameSpace) 
 	default:
 		middleware.LogErr(c).Errorf("search resource type %v invalid",param.ResourceType)
 		return nil,fmt.Sprintf("search resource type %v invalid",param.ResourceType),errors.New(fmt.Sprintf("search resource type %v invalid",param.ResourceType))
@@ -377,6 +435,10 @@ func ResourceInfo(c *gin.Context,param models.ParamReourceYaml) (interface{},str
 		resources,err = client.PvInfo(param.ResourceName) 
 	case "storageclass":
 		resources,err = client.StorageClassInfo(param.NameSpace,param.ResourceName) 
+	case "serviceaccount":
+		resources,err = client.ServiceAccountInfo(param.NameSpace,param.ResourceName)
+	case "role":
+		resources,err = client.RoleInfo(param.NameSpace,param.ResourceName)
 	default:
 		middleware.LogErr(c).Errorf("search resource type %v invalid",param.ResourceType)
 		return nil,fmt.Sprintf("search resource type %v invalid",param.ResourceType),errors.New(fmt.Sprintf("search resource type %v invalid",param.ResourceType))
@@ -441,6 +503,10 @@ func DeleteResource(c *gin.Context,param models.ParamReourceYaml) (string,error)
 		err = client.DeletePv(param.ResourceName)
 	case "storageclass":
 		err = client.DeleteStorageClass(param.ResourceName)
+	case "serviceaccount":
+		err = client.DeleteServiceAccount(param.NameSpace,param.ResourceName)
+	case "role":
+		err = client.DeleteRole(param.NameSpace,param.ResourceName)
 	default:
 		middleware.LogErr(c).Errorf("resource type %v invalid",param.ResourceType)
 		return fmt.Sprintf("resource type %v invalid",param.ResourceType),errors.New(fmt.Sprintf("resource type %v invalid",param.ResourceType))
@@ -719,6 +785,14 @@ func CreateResourceByYaml(c *gin.Context,param models.ParamCreateResourceYaml) (
 			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
 		}
 		resource = storageclass
+	case "serviceaccount":
+		var serviceaccount coreV1.ServiceAccount
+		err = pkg.CheckYamlFormat(param.ResourceYaml,serviceaccount)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = serviceaccount
 	default:
 		middleware.LogErr(c).Errorf("resource type %v invalid",param.ResourceType)
 		return fmt.Sprintf("resource type %v invalid",param.ResourceType),errors.New(fmt.Sprintf("resource type %v invalid",param.ResourceType))
