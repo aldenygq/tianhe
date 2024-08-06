@@ -16,7 +16,21 @@ import (
 	batchV1 "k8s.io/api/batch/v1"
 	networkV1 "k8s.io/api/networking/v1"
 	storageV1 "k8s.io/api/storage/v1"
+	rbacV1 "k8s.io/api/rbac/v1"
 )
+func NodeGroupList(c *gin.Context,param models.ParamGetNodeGroup) (interface{},string,error) {
+	var (
+		nodegroups interface{}
+		err error 
+	)
+	switch param.Cloud{
+	case "idc":
+		// idc无节点池概念
+		nodegroups = nil 
+	case "aliyun":
+		nodegroups ,err = pkg.NodeGroupList(param.ClusterId)
+	}
+}
 /*
 func ServiceAccount(c *gin.Context, param models.ParamClusterId) (interface{},string,error) {
 	client,err := GetK8sClientByClusterId(c,param.ClusterId)
@@ -42,6 +56,7 @@ func GetKubeconfigExpire(c *gin.Context, param models.ParamClusterId) (int64,str
 		middleware.LogErr(c).Errorf("get cluster info by id %v failed:%v\n",param.ClusterId,err)
 		return timestamp,fmt.Sprintf("get cluster info by id failed:%v\n",err),err 
 	}
+	/*
 	// 解码Base64字符串
 	decodedBytes, err := base64.StdEncoding.DecodeString(cluster.Kubeconfig)
 	if err != nil {
@@ -64,6 +79,38 @@ func GetKubeconfigExpire(c *gin.Context, param models.ParamClusterId) (int64,str
     //fmt.Printf("time:%v\n",tm)
     //fmt.Println(tm.Format("2006-01-02 15:04:05"))
 	return timestamp,fmt.Sprintf("get time stamp success"),nil 
+	*/
+	timestamp,err = GetKubeconfigExpireTime(c,cluster.Kubeconfig)
+	if err != nil {
+		middleware.LogErr(c).Errorf("%v",err)
+		return timestamp,fmt.Sprintf("get kubecinfig expire time  failed:%v",err),err 
+	}
+	return timestamp,fmt.Sprintf("get kubecinfig expire time  success"),nil 
+}
+func GetKubeconfigExpireTime(c *gin.Context,kubeconfig string) (int64,error) {
+	var timestamp int64 
+	// 解码Base64字符串
+	decodedBytes, err := base64.StdEncoding.DecodeString(kubeconfig)
+	if err != nil {
+		middleware.LogErr(c).Errorf("decode base64 kubeconfig info by failed:%v\n",err)
+		return timestamp,err 
+	}
+	cmd := fmt.Sprintf("echo %v | grep client-certificate-data | awk -F ' ' '{print $2}' |base64 -d| openssl x509 -text -noout -dates | grep After |awk -F '=' '{print $2}' | grep -v '^$'",string(decodedBytes))
+	content,err := pkg.RunCmd(cmd)
+	if err != nil {
+		middleware.LogErr(c).Errorf("run command failed:%v\n",err)
+		return timestamp,err 
+	}
+	t, err := time.Parse("Jan 02 15:04:05 2006 GMT", strings.TrimSuffix(content, "\x0a"))
+	if err != nil {
+		middleware.LogErr(c).Errorf("parse time failed:%v\n",err)
+		return timestamp,err 
+	}
+	timestamp = t.Unix()
+	//tm := time.Unix(timestamp,0)
+	//fmt.Printf("time:%v\n",tm)
+	//fmt.Println(tm.Format("2006-01-02 15:04:05"))
+	return timestamp,nil 
 }
 func ClusterUserList(c *gin.Context, param models.ParamClusterId) (interface{},string,error) {
 	var cluster *models.K8sCluster = &models.K8sCluster{}
@@ -82,6 +129,15 @@ func RegisterCluster(c *gin.Context, param models.ParamRegisterCluster) (string,
 	if err != nil {
 		middleware.LogErr(c).Errorf("get cluster %v user info by kubeconfig failed:%v\n",param.ClusterName,err)
 		return fmt.Sprintf("get cluster %v user info by kubeconfig failed:%v\n",param.ClusterName,err),err 
+	}
+	timestamp,err := GetKubeconfigExpireTime(c,param.Kubeconfig)
+	if err != nil {
+		middleware.LogErr(c).Errorf("get cluster %v kubeconfig failed:%v\n",err)
+		return fmt.Sprintf("get cluster %v kubeconfig failed:%v\n",param.ClusterName,err),err 
+	}
+	if timestamp <= time.Now().Unix() {
+		middleware.LogErr(c).Errorf("cluster %v kubeconfig expired:%v",param.ClusterName)
+		return fmt.Sprintf("cluster %v kubeconfig expired:%v",param.ClusterName),errors.New(fmt.Sprintf("cluster %v kubeconfig expired:%v",param.ClusterName)) 
 	}
 	cluster.ClusterId = param.ClusterId
 	cluster.ClusterName = param.ClusterName
@@ -313,6 +369,10 @@ func ReourceYaml(c *gin.Context,param models.ParamReourceYaml) (string,string,er
 		resource,err = client.StorageClassInfo(param.NameSpace,param.ResourceName)
 	case "serviceaccount":
 		resource,err = client.ServiceAccountInfo(param.NameSpace,param.ResourceName)
+	case "role":
+		resource,err = client.RoleInfo(param.NameSpace,param.ResourceName)
+	case "rolebinding":
+		resource,err = client.RoleBindingInfo(param.NameSpace,param.ResourceName)
 	default:
 		middleware.LogErr(c).Errorf("resource type:%v invalid",param.ResourceType)
 		return "",fmt.Sprintf("resource type:%v invalid",param.ResourceType),errors.New(fmt.Sprintf("resource type:%v invalid",param.ResourceType))
@@ -381,6 +441,8 @@ func ReourceList(c *gin.Context,param models.ParamReourceList) (interface{},stri
 		resources,err = client.ServiceAccountList() 
 	case "role":
 		resources,err = client.RoleList(param.NameSpace) 
+	case "rolebinding":
+		resources,err = client.RoleBindingList(param.NameSpace) 
 	default:
 		middleware.LogErr(c).Errorf("search resource type %v invalid",param.ResourceType)
 		return nil,fmt.Sprintf("search resource type %v invalid",param.ResourceType),errors.New(fmt.Sprintf("search resource type %v invalid",param.ResourceType))
@@ -439,6 +501,8 @@ func ResourceInfo(c *gin.Context,param models.ParamReourceYaml) (interface{},str
 		resources,err = client.ServiceAccountInfo(param.NameSpace,param.ResourceName)
 	case "role":
 		resources,err = client.RoleInfo(param.NameSpace,param.ResourceName)
+	case "rolebinding":
+		resources,err = client.RoleBindingInfo(param.NameSpace,param.ResourceName)
 	default:
 		middleware.LogErr(c).Errorf("search resource type %v invalid",param.ResourceType)
 		return nil,fmt.Sprintf("search resource type %v invalid",param.ResourceType),errors.New(fmt.Sprintf("search resource type %v invalid",param.ResourceType))
@@ -507,6 +571,8 @@ func DeleteResource(c *gin.Context,param models.ParamReourceYaml) (string,error)
 		err = client.DeleteServiceAccount(param.NameSpace,param.ResourceName)
 	case "role":
 		err = client.DeleteRole(param.NameSpace,param.ResourceName)
+	case "rolebinding":
+		err = client.DeleteRoleBinding(param.NameSpace,param.ResourceName)
 	default:
 		middleware.LogErr(c).Errorf("resource type %v invalid",param.ResourceType)
 		return fmt.Sprintf("resource type %v invalid",param.ResourceType),errors.New(fmt.Sprintf("resource type %v invalid",param.ResourceType))
@@ -793,6 +859,14 @@ func CreateResourceByYaml(c *gin.Context,param models.ParamCreateResourceYaml) (
 			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
 		}
 		resource = serviceaccount
+	case "role":
+		var role rbacV1.Role
+		err := pkg.CheckYamlFormat(param.ResourceYaml,role)
+		if err != nil {
+			middleware.LogErr(c).Errorf("resource yaml format invalid:%v\n",err)
+			return fmt.Sprintf("resource yaml format invalid:%v\n",err),err 
+		}
+		resource = role
 	default:
 		middleware.LogErr(c).Errorf("resource type %v invalid",param.ResourceType)
 		return fmt.Sprintf("resource type %v invalid",param.ResourceType),errors.New(fmt.Sprintf("resource type %v invalid",param.ResourceType))

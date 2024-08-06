@@ -511,6 +511,7 @@ type K8sCluster struct {
 	ClusterUser string `gorm:"column:cluster_user;type:varchar(256)" json:"cluster_user" description:"集群用户"`
 	Creator string `gorm:"column:creator;type:varchar(128)" json:"creator" description:"创建者"`
 	Env string `gorm:"column:env;type:varchar(16)" json:"env" description:"环境"`
+	Cloud string `gorm:"column:cloud;type:varchar(16)" json:"cloud" description:"cloud,qcloud/aws/aliyun/huaweicloud/gcp/idc"`
 	Status int64 `gorm:"column:status;type:int(11)" json:"status" description:状态：1(有效)/0(失效)"`
 }
 

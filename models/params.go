@@ -4,12 +4,17 @@ package models
 type ParamHeader struct {
 	Token string `header:"Access_Token" binding:"required,min=1" label:"请求header(token)"`
 }
+type ParamGetNodeGroup struct {
+	ParamClusterId
+	ParamNodeGroup
+}
 type ParamRegisterCluster struct {
 	Kubeconfig string  `form:"kubeconfig"  json:"kubeconfig" binding:"required,min=0" label:"k8s认证文件"`
 	Env string `form:"env"  json:"env" binding:"required,min=0" label:"环境"`
 	ClusterName string `form:"cluster_name"  json:"cluster_name" binding:"required,min=0" label:"集群名称"`
 	ClusterId string 	`form:"cluster_id"  json:"cluster_id" binding:"required,min=0" label:"集群id"`
 	Creator string 
+	ParamNodeGroup
 }
 type ParamCreateNs struct {
 	ParamClusterId
@@ -93,6 +98,9 @@ type ParamPatchNodeSchedule struct {
 	ParamClusterId
 	ParamNode
 	ScheduleRule string `form:"schedule_rule"  json:"schedule_rule" binding:"required,min=0" label:"调度策略"`
+}
+type ParamNodeGroup struct {
+	Cloud string `form:"cloud"  json:"cloud" binding:"required,min=0" label:"云厂商"`
 }
 type ParamClusterId struct {
 	ClusterId string 	`form:"cluster_id"  json:"cluster_id" binding:"required,min=0" label:"集群id"`

@@ -19,6 +19,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	rbacV1 "k8s.io/api/rbac/v1"
+	//rbacV1beta1 "k8s.io/api/rbac/v1beta1"
 )
 
 type K8sClient struct {
@@ -177,6 +178,14 @@ func (k *K8sClient) CreateSecretByImageCert(ns,secretname,url,user,password stri
  
 	return nil 
 }
+func (k *K8sClient) RoleBindingInfo(ns,name string) (*rbacV1.RoleBinding,error) {
+	defer k.CloseClient()
+	rolebinding,err := k.Client.RbacV1().RoleBindings(ns).Get(context.TODO(),name,metaV1.GetOptions{})
+	if err != nil {
+		return nil,err 
+	}
+	return rolebinding,nil 
+} 
 func (k *K8sClient) NsInfo(ns string) (*coreV1.Namespace,error) {
 	defer k.CloseClient()
 	namespaceInfo,err := k.Client.CoreV1().Namespaces().Get(context.TODO(),ns,metaV1.GetOptions{})
@@ -192,6 +201,22 @@ func (k *K8sClient) RoleList(ns string) (*rbacV1.RoleList,error) {
 		return nil,err 
 	}
 	return roles,nil 
+}
+func (k *K8sClient) RoleBindingList(ns string) (*rbacV1.RoleBindingList,error) {
+	defer k.CloseClient()
+	rolebindings,err := k.Client.RbacV1().RoleBindings(ns).List(context.TODO(),metaV1.ListOptions{})
+	if err != nil {
+		return nil,err 
+	}
+	return rolebindings,nil 
+}
+func (k *K8sClient) DeleteRoleBinding(ns,name string) error {
+	defer k.CloseClient()
+	err := k.Client.RbacV1().RoleBindings(ns).Delete(context.TODO(),name,metaV1.DeleteOptions{})
+	if err != nil {
+		return err 
+	}
+	return nil 
 }
 func (k *K8sClient) NsList() (*coreV1.NamespaceList,error) {
 	defer k.CloseClient()

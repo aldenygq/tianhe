@@ -7,6 +7,25 @@ import (
 	"fmt"
 	"tianhe/service"
 )
+
+func NodeGroupList(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	var param models.ParamGetNodeGroup
+	err := ctx.Validate(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
+	data,msg,err := service.NodeGroupList(ctx.Ctx,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get node group list by cluster id %v failed:%v",param.ClusterId,err))
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, data)
+	return
+}
 /*
 func ServiceAccount(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
