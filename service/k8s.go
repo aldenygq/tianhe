@@ -28,8 +28,22 @@ func NodeGroupList(c *gin.Context,param models.ParamGetNodeGroup) (interface{},s
 		// idc无节点池概念
 		nodegroups = nil 
 	case "aliyun":
-		nodegroups ,err = pkg.NodeGroupList(param.ClusterId)
+		nodegroups ,err = pkg.NodeGroupListByAliyun(param.ClusterId)
+	case "aws":
+		nodegroups ,err = pkg.NodeGroupListByAws(param.ClusterId)
+	case "huaweicloud":
+		nodegroups ,err = pkg.NodeGroupListByHuaweiCloud(param.ClusterId)
+	case "qcloud":
+		nodegroups ,err = pkg.NodeGroupListByQcloud(param.ClusterId)
+	default:
+		middleware.LogErr(c).Errorf("cloud invalid")
+		return nil,fmt.Sprintf("cloud invalid"),errors.New(fmt.Sprintf("cloud invalid"))
 	}
+	if err != nil {
+		middleware.LogErr(c).Errorf("get node group list by cluster:%v failed:%v\n",param.ClusterId,err)
+		return nil,fmt.Sprintf("get node group list by cluster:%v failed:%v\n",param.ClusterId,err),err
+	}
+	return nodegroups,fmt.Sprintf("get node group list by cluster:%v success",param.ClusterId),nil 
 }
 /*
 func ServiceAccount(c *gin.Context, param models.ParamClusterId) (interface{},string,error) {
