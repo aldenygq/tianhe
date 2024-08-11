@@ -25,7 +25,8 @@ require (
 
 require (
 	github.com/alibabacloud-go/alibabacloud-gateway-spi v0.0.4 // indirect
-	github.com/alibabacloud-go/darabonba-openapi/v2 v2.0.6 // indirect
+	github.com/alibabacloud-go/cs-20151215/v5 v5.7.2 // indirect
+	github.com/alibabacloud-go/darabonba-openapi/v2 v2.0.8 // indirect
 	github.com/alibabacloud-go/debug v1.0.0 // indirect
 	github.com/alibabacloud-go/dysmsapi-20170525/v3 v3.0.6 // indirect
 	github.com/alibabacloud-go/endpoint-util v1.1.0 // indirect

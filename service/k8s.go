@@ -22,19 +22,42 @@ func NodeGroupList(c *gin.Context,param models.ParamGetNodeGroup) (interface{},s
 	var (
 		nodegroups interface{}
 		err error 
+		cluster *models.K8sCluster = &models.K8sCluster{}
+		secretinfo *models.CloudSecretInfo = &models.CloudSecretInfo{}
 	)
-	switch param.Cloud{
+	cluster.ClusterId = param.ClusterId
+	err = cluster.GetClusterById()
+	if err != nil {
+		middleware.LogErr(c).Errorf("get cluster %v failed:%v\n",param.ClusterId,err)
+		return nil,fmt.Sprintf("et cluster %v failed:%v\n",param.ClusterId,err),err 
+	}
+	secretinfo.CloudAccount = cluster.CloudAccount
+	secretinfo.Cloud = cluster.Cloud
+	secretinfo.Env = cluster.Env
+	secretinfo.CloudProduct = cluster.CloudProduct
+	err = secretinfo.GetSecretInfoByType()
+	if err != nil {
+		middleware.LogErr(c).Errorf("cloud %v ,cloud product:%v,cloud account %v,get secret info failed:%v\n",cluster.Cloud,cluster.CloudProduct,cluster.CloudAccount,err)
+		return nil,fmt.Sprintf("cloud %v ,cloud product:%v,cloud account %v,get secret info failed:%v\n",cluster.Cloud,cluster.CloudProduct,cluster.CloudAccount,err),err 
+	}
+	// 解码Base64字符串
+	decodedBytes, err := base64.StdEncoding.DecodeString(secretinfo.SecreyKey)
+	if err != nil {
+		middleware.LogErr(c).Errorf("access key:%v,decode base64 secret key info failed:%v\n",secretinfo.AccessKey,err)
+		return nil,fmt.Sprintf("decode base64 secret key info by failed:%v\n",err),err 
+	}
+	switch cluster.Cloud {
 	case "idc":
 		// idc无节点池概念
 		nodegroups = nil 
 	case "aliyun":
-		nodegroups ,err = pkg.NodeGroupListByAliyun(param.ClusterId)
-	case "aws":
-		nodegroups ,err = pkg.NodeGroupListByAws(param.ClusterId)
-	case "huaweicloud":
-		nodegroups ,err = pkg.NodeGroupListByHuaweiCloud(param.ClusterId)
-	case "qcloud":
-		nodegroups ,err = pkg.NodeGroupListByQcloud(param.ClusterId)
+		nodegroups ,err = pkg.NodeGroupListByAliyun(param.ClusterId,secretinfo.AccessKey,string(decodedBytes))
+	//case "aws":
+	//	nodegroups ,err = pkg.NodeGroupListByAws(param.ClusterId)
+	//case "huaweicloud":
+	//	nodegroups ,err = pkg.NodeGroupListByHuaweiCloud(param.ClusterId)
+	//case "qcloud":
+	//	nodegroups ,err = pkg.NodeGroupListByQcloud(param.ClusterId)
 	default:
 		middleware.LogErr(c).Errorf("cloud invalid")
 		return nil,fmt.Sprintf("cloud invalid"),errors.New(fmt.Sprintf("cloud invalid"))
@@ -45,22 +68,63 @@ func NodeGroupList(c *gin.Context,param models.ParamGetNodeGroup) (interface{},s
 	}
 	return nodegroups,fmt.Sprintf("get node group list by cluster:%v success",param.ClusterId),nil 
 }
-/*
-func ServiceAccount(c *gin.Context, param models.ParamClusterId) (interface{},string,error) {
-	client,err := GetK8sClientByClusterId(c,param.ClusterId)
+func NodeListByNodeGroup(c *gin.Context,param models.ParamNodeListByNodeGroup) (interface{},string,error) {
+	var (
+		nodelist interface{}
+		err error 
+		secretinfo *models.CloudSecretInfo = &models.CloudSecretInfo{}
+		cluster *models.K8sCluster = &models.K8sCluster{}
+	)
+	cluster.ClusterId = param.ClusterId
+	err = cluster.GetClusterById()
 	if err != nil {
-		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
-		return nil,fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+		middleware.LogErr(c).Errorf("get cluster %v failed:%v\n",param.ClusterId,err)
+		return nil,fmt.Sprintf("et cluster %v failed:%v\n",param.ClusterId,err),err 
 	}
-	label,err := client.ServiceAccount()
+	secretinfo.CloudAccount = cluster.CloudAccount
+	secretinfo.Cloud = cluster.Cloud
+	secretinfo.Env = cluster.Env
+	secretinfo.CloudProduct = cluster.CloudProduct
+	err = secretinfo.GetSecretInfoByType()
 	if err != nil {
-		middleware.LogErr(c).Errorf("get service account by cluster %v failed:%v\n",param.ClusterId,err)
-		return nil,fmt.Sprintf("get service account by cluster %v failed:%v\n",param.ClusterId,err),err 		
+		middleware.LogErr(c).Errorf("cloud %v ,cloud product:%v,cloud account %v,get secret info failed:%v\n",cluster.Cloud,cluster.CloudProduct,cluster.CloudAccount,err)
+		return nil,fmt.Sprintf("cloud %v ,cloud product:%v,cloud account %v,get secret info failed:%v\n",cluster.Cloud,cluster.CloudProduct,cluster.CloudAccount,err),err 
 	}
-
-	return label,fmt.Sprintf("get service account by cluster %v success",param.ClusterId),nil 
+	// 解码Base64字符串
+	decodedBytes, err := base64.StdEncoding.DecodeString(secretinfo.SecreyKey)
+	if err != nil {
+		middleware.LogErr(c).Errorf("access key:%v,decode base64 secret key info failed:%v\n",secretinfo.AccessKey,err)
+		return nil,fmt.Sprintf("decode base64 secret key info by failed:%v\n",err),err 
+	}
+	//获取节点列表
+	switch cluster.Cloud {
+	case "idc":
+		//idc无节点池概念,直接获取集群全部节点
+		client,err := GetK8sClientByClusterId(c,param.ClusterId)
+		if err != nil {
+			middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",param.ClusterId,err)
+			return "",fmt.Sprintf("new k8s cluster %v client failed:%v\n",param.ClusterId,err),err 
+		}
+		nodelist,err = client.NodeList() 
+	case "aliyun":
+		nodelist,err = pkg.NodeListByNodeGroup(param.ClusterId,param.NodeGroupName,secretinfo.AccessKey,string(decodedBytes))
+	//case "aws":
+	//	nodegroups ,err = pkg.NodeGroupListByAws(param.ClusterId)
+	//case "huaweicloud":
+	//	nodegroups ,err = pkg.NodeGroupListByHuaweiCloud(param.ClusterId)
+	//case "qcloud":
+	//	nodegroups ,err = pkg.NodeGroupListByQcloud(param.ClusterId)
+	default:
+		middleware.LogErr(c).Errorf("cloud invalid")
+		return nil,fmt.Sprintf("cloud invalid"),errors.New(fmt.Sprintf("cloud invalid"))
+	}
+	if err != nil {
+		middleware.LogErr(c).Errorf("get node list by cluster:%v and node group %v failed:%v\n",param.ClusterId,param.NodeGroupName,err)
+		return nil,fmt.Sprintf("get node list by cluster:%v and node group %v failed:%v\n",param.ClusterId,param.NodeGroupName,err),err
+	}
+	return nodelist,fmt.Sprintf("get node list by cluster:%v and node group %v success",param.ClusterId,param.NodeGroupName),nil 
 }
-*/
+
 func GetKubeconfigExpire(c *gin.Context, param models.ParamClusterId) (int64,string,error) {
 	var cluster *models.K8sCluster = &models.K8sCluster{}
 	var timestamp int64 
@@ -70,30 +134,6 @@ func GetKubeconfigExpire(c *gin.Context, param models.ParamClusterId) (int64,str
 		middleware.LogErr(c).Errorf("get cluster info by id %v failed:%v\n",param.ClusterId,err)
 		return timestamp,fmt.Sprintf("get cluster info by id failed:%v\n",err),err 
 	}
-	/*
-	// 解码Base64字符串
-	decodedBytes, err := base64.StdEncoding.DecodeString(cluster.Kubeconfig)
-	if err != nil {
-		middleware.LogErr(c).Errorf("decode base64 kubeconfig info by failed:%v\n",err)
-		return timestamp,fmt.Sprintf("decode base64 kubeconfig info by failed:%v\n",err),err 
-	}
-	cmd := fmt.Sprintf("echo %v | grep client-certificate-data | awk -F ' ' '{print $2}' |base64 -d| openssl x509 -text -noout -dates | grep After |awk -F '=' '{print $2}' | grep -v '^$'",string(decodedBytes))
-    content,err := pkg.RunCmd(cmd)
-	if err != nil {
-        middleware.LogErr(c).Errorf("run command failed:%v\n",err)
-        return timestamp,fmt.Sprintf("run command failed:%v\n",err),err 
-    }
-    t, err := time.Parse("Jan 02 15:04:05 2006 GMT", strings.TrimSuffix(content, "\x0a"))
-    if err != nil {
-        middleware.LogErr(c).Errorf("parse time failed:%v\n",err)
-        return timestamp,fmt.Sprintf("parse time failed:%v\n",err),err 
-    }
-    timestamp = t.Unix()
-    //tm := time.Unix(timestamp,0)
-    //fmt.Printf("time:%v\n",tm)
-    //fmt.Println(tm.Format("2006-01-02 15:04:05"))
-	return timestamp,fmt.Sprintf("get time stamp success"),nil 
-	*/
 	timestamp,err = GetKubeconfigExpireTime(c,cluster.Kubeconfig)
 	if err != nil {
 		middleware.LogErr(c).Errorf("%v",err)
@@ -161,7 +201,25 @@ func RegisterCluster(c *gin.Context, param models.ParamRegisterCluster) (string,
 	cluster.Kubeconfig = base64.StdEncoding.EncodeToString([]byte(param.Kubeconfig))
 	cluster.ClusterUser = username
 	cluster.Status= 1
-
+	cluster.CloudAccount = param.CloudAccount
+	cluster.Cloud = param.Cloud
+	switch cluster.Cloud {
+	case "aliyun":
+		cluster.CloudProduct = "ack"
+	case "aws":
+		cluster.CloudProduct = "eks"
+	case "huaweicloud":
+		cluster.CloudProduct = "cce"
+	case "qcloud":
+		cluster.CloudProduct = "tke"
+	case "gcp":
+		cluster.CloudProduct = "gke"
+	case "idc":
+		cluster.CloudProduct = "idc"
+	default:
+		middleware.LogErr(c).Errorf("param cloud %v invalid",param.Cloud)
+		return fmt.Sprintf("param cloud %v invalid",param.Cloud),errors.New(fmt.Sprintf("param cloud %v invalid",param.Cloud)) 
+	}
 	err = cluster.Create()
 	if err != nil {
 		middleware.LogErr(c).Errorf("register k8s cluster %v failed:%v\n",param.ClusterName,err)

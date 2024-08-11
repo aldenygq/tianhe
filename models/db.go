@@ -19,6 +19,7 @@ const (
 	USERS             = "users"
 	HOST = "host"
 	K8SCLUSTER = "k8s_cluster"
+	SECRET_INFO = "cloud_secret_info"
 )
 type Users struct {
 	Ctime    int64  `gorm:"column:ctime;type:int(11)" json:"ctime" description:"创建时间"`
@@ -513,6 +514,9 @@ type K8sCluster struct {
 	Env string `gorm:"column:env;type:varchar(16)" json:"env" description:"环境"`
 	Cloud string `gorm:"column:cloud;type:varchar(16)" json:"cloud" description:"cloud,qcloud/aws/aliyun/huaweicloud/gcp/idc"`
 	Status int64 `gorm:"column:status;type:int(11)" json:"status" description:状态：1(有效)/0(失效)"`
+	CloudAccount string `gorm:"column:cloud_account;type:int(11)" json:"cloud_account" description:"所属云账号"`
+	//阿里云:ack/AWS:eks/huaweicloud:cce/qcloud:tke/gcp:gke
+	CloudProduct string `gorm:"column:cloud_product;type:int(11)" json:"cloud_product" description:"所属云产品"`
 }
 
 func (k *K8sCluster) Create() error {
@@ -584,4 +588,64 @@ func (k *K8sCluster) ClusterUsers() ([]string,error) {
 		return nil,err
 	}
 	return users,nil
+}
+
+
+
+type CloudSecretInfo struct {
+	Ctime    int64  `gorm:"column:ctime;type:int(11)" json:"ctime" description:"创建时间"`
+	Id       int64  `gorm:"column:id;PRIMARY_KEY;type:int(10)" json:"id"  description:"主键id"`
+	AccessKey string `gorm:"column:access_key;type:varchar(512)" json:"access_key"  description:"access_key"`
+	Mtime    int64  `gorm:"column:mtime;type:int(11)" json:"mtime" description:"修改时间"`
+	SecreyKey   string `gorm:"column:secret_key;type:varchar(512)" json:"secret_key" description:"secret_key"`
+	//UseType string `gorm:"column:use_type;type:varchar(512)" json:"use_type" description:"使用场景:user_account(用户帐密)/mysql_account(数据库帐密)/ssh_account(主机用户帐密)/cloud_account(云账号)"`
+	//user_account类型归属值为用户，值与AccessKey一致
+	//mysql_account类型归属为数据库用户，值与AccessKey一致
+	//ssh_account(主机用户帐密)为ssh登录用户，值与AccessKey一致
+	//cloud_account(云账号)为ak对应用户，值为ak对应用户名
+	AccountOwner string `gorm:"column:account_owner;type:varchar(512)" json:"account_owner" description:"账号归属"`
+	Creator string `gorm:"column:creator;type:varchar(128)" json:"creator" description:"创建者"`
+	//prod(生产)/pre(预发)/sit(测试)/dev(开发)
+	Env string `gorm:"column:env;type:varchar(16)" json:"env" description:"环境"`
+	//aliyun/aws/gcp/huaweicloud/qcloud/custom
+	Cloud string `gorm:"column:cloud;type:varchar(16)" json:"cloud" description:"所属云厂商"`
+	//阿里云：ack/ecs/slb/oss/nas/vpc/vsw/eip等
+	//aws：eks/ec2/elb/s3/ofs/vpc/vsw/eip等
+	CloudProduct string `gorm:"column:cloud_product;type:varchar(256)" json:"cloud_product" description:"云产品"`
+	CloudAccount string `gorm:"column:cloud_account;type:varchar(256)" json:"cloud_account" description:"云账号"`
+	Status int64 `gorm:"column:status;type:int(11)" json:"status" description:"状态:1(有效)/0(失效)"`
+}
+func (s *CloudSecretInfo) GetSecretInfoByType() error {
+	err := middleware.Sql.Table(SECRET_INFO).Where("cloud_account = ? and cloud = ? and cloud_product = ? and env = ? and status = 1",s.CloudAccount,s.Cloud,s.CloudProduct,s.Env).Take(&s).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New(fmt.Sprintf("get secret info,cloud account %v ,cloud:%v,cloud product %v,env :%v not found ", s.CloudAccount,s.Cloud,s.CloudProduct,s.Env))
+	} else if err != nil {
+		return err
+	}
+	return nil
+}
+func (s *CloudSecretInfo) Create() error {
+	tx := middleware.Sql.Begin()
+	err := tx.Table(SECRET_INFO).Create(s).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit().Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+	
+}
+func (s *CloudSecretInfo) Exist() bool {
+	err := middleware.Sql.Table(SECRET_INFO).Where("cloud_account = ? and cloud = ? and cloud_product = ? and env = ? and status = 1",s.CloudAccount,s.Cloud,s.CloudProduct,s.Env).Take(&s).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false 
+	} else if err != nil {
+		return true
+	}
+	return true
 }

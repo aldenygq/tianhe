@@ -26,6 +26,24 @@ func NodeGroupList(c *gin.Context) {
 	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, data)
 	return
 }
+func NodeListByNodeGroup(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	var param models.ParamNodeListByNodeGroup
+	err := ctx.Validate(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
+	data,msg,err := service.NodeListByNodeGroup(ctx.Ctx,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf("%v",err)
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, data)
+	return
+}
 /*
 func ServiceAccount(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}

@@ -67,15 +67,14 @@ func registerLoginRouter(auth *gin.RouterGroup) {
 		//a.GET("/renewal", app.Renewal).Use(middleware.Auth)
 	}
 }
-/*
-func registerKeyRouter(key *gin.RouterGroup) {
-	k := key.Group("/v1")
+
+func registerSecretRouter(key *gin.RouterGroup) {
+	k := key.Group("/secret").Use(middleware.Auth())
 	{
-		//用户登录
-		k.POST("/addkey", app.AddKey)
+		k.POST("/addCloudSecret", app.AddCloudSecret)
 	}
 }
-*/
+
 func registerHostRouter(host *gin.RouterGroup) {
 	h := host.Group("/host").Use(middleware.Auth())
 	{
@@ -139,8 +138,10 @@ func registerK8sRouter(k8s *gin.RouterGroup) {
 		k.POST("/createResourceByYaml",app.CreateResourceByYaml)
 		//获取k8s集群user列表
 		k.GET("/userList",app.ClusterUserList)
-		//获取节点池
+		//获取节点池列表
 		k.GET("nodeGroup",app.NodeGroupList)
+		//获取节点池下节点列表
+		k.GET("nodeListByNodeGroup",app.NodeListByNodeGroup)
 	}
 }
 //健康检测

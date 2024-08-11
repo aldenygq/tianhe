@@ -36,6 +36,7 @@ func InitRouter() *gin.Engine {
 		registerHealthRouter(apiGroup)
 		registerLoginRouter(apiGroup)
 		registerHostRouter(apiGroup)
+		registerSecretRouter(apiGroup)
 	}
 
 	return r

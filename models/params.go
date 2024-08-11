@@ -1,25 +1,55 @@
 package models
 
 
-type ParamHeader struct {
-	Token string `header:"Access_Token" binding:"required,min=1" label:"请求header(token)"`
+//secret相关参数
+type ParamAddCloudSecret struct {
+	ParamCloudAccount
+	ParamCloud
+	ParamCloudProduct
+	ParamEnv
+	Creator string 
+	AccessKey string `form:"access_key"  json:"access_key" binding:"required,min=0" label:"access_key"`
+	SecretKey string `form:"secret_key"  json:"secret_key" binding:"required,min=0" label:"secret_key"`
+	AccountOwner string `form:"account_owner" json:"account_owner" binding:"required,min=0" label:"account_owner"`
 }
+//K8S 相关参数
 type ParamGetNodeGroup struct {
+	ParamClusterId
+}
+type ParamNodeListByNodeGroup struct {
 	ParamClusterId
 	ParamNodeGroup
 }
-type ParamRegisterCluster struct {
-	Kubeconfig string  `form:"kubeconfig"  json:"kubeconfig" binding:"required,min=0" label:"k8s认证文件"`
-	Env string `form:"env"  json:"env" binding:"required,min=0" label:"环境"`
-	ClusterName string `form:"cluster_name"  json:"cluster_name" binding:"required,min=0" label:"集群名称"`
-	ClusterId string 	`form:"cluster_id"  json:"cluster_id" binding:"required,min=0" label:"集群id"`
-	Creator string 
-	ParamNodeGroup
+type ParamHostInfo struct {
+	ParamHostId
+}
+
+type ParamDelHost struct {
+	ParamHostId
 }
 type ParamCreateNs struct {
 	ParamClusterId
 	ParamNameSpace
 }
+type ParamNodeInfo struct {
+	ParamClusterId
+	ParamNode
+}
+type ParamPodInfo struct {
+	ParamClusterId
+	ParamNameSpace
+	ParamPod
+}
+type ParamRegisterCluster struct {
+	Kubeconfig string  `form:"kubeconfig"  json:"kubeconfig" binding:"required,min=0" label:"k8s认证文件"`
+	ParamEnv
+	ClusterName string `form:"cluster_name"  json:"cluster_name" binding:"required,min=0" label:"集群名称"`
+	ClusterId string 	`form:"cluster_id"  json:"cluster_id" binding:"required,min=0" label:"集群id"`
+	Creator string 
+	ParamCloud
+	ParamCloudAccount
+}
+
 type ParamCreateConfigmap struct {
 	ParamClusterId
 	ParamNameSpace
@@ -58,31 +88,9 @@ type ParamReourceList struct {
 }
 type ParamReourceInfo struct {
 	ParamClusterId
-	NameSpace string  `form:"namespace"  json:"namespace" binding:"required,min=0" label:"namespace"`
+	NameSpace string  `form:"namespace"  json:"namespace" binding:"omitempty,min=0" label:"namespace"`
 	ResourceType string `form:"resource_type"  json:"resource_type" binding:"required,min=0" label:"资源类型"`
 	ResourceName string `form:"resource_name"  json:"resource_name" binding:"required,min=0" label:"资源名称"`
-}
-type ParamNodeInfo struct {
-	ParamClusterId
-	ParamNode
-}
-/*
-type ParamRollUpdateDeployment struct {
-	ParamClusterId
-	ParamNameSpace
-	ParamDeployment
-}
-type ParamRollUpdateStatefulSet struct {
-	ParamClusterId
-	ParamNameSpace
-	ParamStatefulSet
-}
-*/
-type ParamDeployment struct {
-	Deployment string `form:"deployment"  json:"deployment" binding:"required,min=0" label:"deployment"`
-}
-type ParamStatefulSet struct {
-	StatefulSet string `form:"statefulset"  json:"statefulset" binding:"required,min=0" label:"statefulset"`
 }
 type ParamPatchNodeLabel struct {
 	ParamClusterId
@@ -100,6 +108,15 @@ type ParamPatchNodeSchedule struct {
 	ScheduleRule string `form:"schedule_rule"  json:"schedule_rule" binding:"required,min=0" label:"调度策略"`
 }
 type ParamNodeGroup struct {
+	NodeGroupName string `form:"node_group_name"  json:"node_group_name" binding:"required,min=0" label:"节点池名称"`
+}
+type ParamDeployment struct {
+	Deployment string `form:"deployment"  json:"deployment" binding:"required,min=0" label:"deployment"`
+}
+type ParamStatefulSet struct {
+	StatefulSet string `form:"statefulset"  json:"statefulset" binding:"required,min=0" label:"statefulset"`
+}
+type ParamCloud struct {
 	Cloud string `form:"cloud"  json:"cloud" binding:"required,min=0" label:"云厂商"`
 }
 type ParamClusterId struct {
@@ -114,20 +131,24 @@ type ParamPod struct {
 type ParamNode struct {
 	NodeName string  `form:"nodename"  json:"nodename" binding:"required,min=0" label:"nodename"`
 }
-type ParamPodInfo struct {
-	ParamClusterId
-	ParamNameSpace
-	ParamPod
+type ParamCloudAccount struct {
+	CloudAccount string  `form:"cloud_account"  json:"cloud_account" binding:"required,min=0" label:"云账号"`
 }
+type ParamCloudProduct struct {
+	CloudProduct string  `form:"cloud_product"  json:"cloud_product" binding:"required,min=0" label:"云产品"`
+}
+type ParamEnv struct {
+	Env string  `form:"env"  json:"env" binding:"required,min=0" label:"环境"`
+}
+/*
+type ParamSecretType struct {
+	SecretType string `form:"secret_type"  json:"secret_type" binding:"required,min=0" label:"密钥类型"`
+} 
+*/
 
-type ParamDelHost struct {
-	ParamHostId
-}
+
 type ParamHostId struct {
 	HostId string `form:"host_id"  json:"host_id" binding:"required,min=0" label:"主机id"`
-}
-type ParamHostInfo struct {
-	ParamHostId
 }
 
  // host参数
@@ -151,8 +172,12 @@ type ParamAddHost struct {
 
 
 
-
- type ParamSetUserTokenExpire struct {
+//用户/登录相关
+//请求header参数
+type ParamHeader struct {
+	Token string `header:"Access_Token" binding:"required,min=1" label:"请求header(token)"`
+}
+type ParamSetUserTokenExpire struct {
 	ExpireTime int64 `form:"expire_time"  json:"expire_time" binding:"omitempty,gt=0" label:"token 有效期"`
 }
 type ParamLogin struct {
@@ -207,6 +232,8 @@ type ParamMobile struct {
 type ParamModifyUserPassword struct {
 	PassWord string `form:"password"  json:"password" binding:"required,min=1" label:"密码"`
 }
+
+//值班相关
 type ParamAddOncallRule struct {
 	ParamOncallRule
 	CreatorInfo
@@ -263,15 +290,6 @@ type 	SubscribeNotify struct{
 	NotifyTime string `form:"notify_time" json:"notify_time" binding:"omitempty,min=1" label:"通知时间" description:"日类"`
 }
 
-/*
-type OncallPeople struct {
-	OncallUsers []User `form:"oncall_users" json:"oncall_users" binding:"required,len=1,dive" label:"值班人员列表"`
-}
-type User struct {
-	 Type string `form:"type" json:"type" binding:"omitempty,min=1" label:"值班人员类型，main(主)、back(备),非必填，如不填，则表示均为主"`
-	 User string `form:"user" json:"user" binding:"request,min=1" label:"值班人员信息，显示用户中文名"`
-}
- */
 
 type ParamDutyPerson struct {
 	RuleName string `form:"rule_name" json:"rule_name" binding:"omitempty,min=1" label:"规则名称" description:"若指定值班规则，则参数为值班规则名称，中英文不限"`
