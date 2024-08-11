@@ -18,6 +18,57 @@ import (
 	storageV1 "k8s.io/api/storage/v1"
 	rbacV1 "k8s.io/api/rbac/v1"
 )
+
+func AddonList(c *gin.Context,param models.ParamClusterId) (interface{},string,error) {
+	var (
+		addons interface{}
+		err error 
+		cluster *models.K8sCluster = &models.K8sCluster{}
+		secretinfo *models.CloudSecretInfo = &models.CloudSecretInfo{}
+	)
+	cluster.ClusterId = param.ClusterId
+	err = cluster.GetClusterById()
+	if err != nil {
+		middleware.LogErr(c).Errorf("get cluster %v failed:%v\n",param.ClusterId,err)
+		return nil,fmt.Sprintf("et cluster %v failed:%v\n",param.ClusterId,err),err 
+	}
+	secretinfo.CloudAccount = cluster.CloudAccount
+	secretinfo.Cloud = cluster.Cloud
+	secretinfo.Env = cluster.Env
+	secretinfo.CloudProduct = cluster.CloudProduct
+	err = secretinfo.GetSecretInfoByType()
+	if err != nil {
+		middleware.LogErr(c).Errorf("cloud %v ,cloud product:%v,cloud account %v,get secret info failed:%v\n",cluster.Cloud,cluster.CloudProduct,cluster.CloudAccount,err)
+		return nil,fmt.Sprintf("cloud %v ,cloud product:%v,cloud account %v,get secret info failed:%v\n",cluster.Cloud,cluster.CloudProduct,cluster.CloudAccount,err),err 
+	}
+	// 解码Base64字符串
+	decodedBytes, err := base64.StdEncoding.DecodeString(secretinfo.SecreyKey)
+	if err != nil {
+		middleware.LogErr(c).Errorf("access key:%v,decode base64 secret key info failed:%v\n",secretinfo.AccessKey,err)
+		return nil,fmt.Sprintf("decode base64 secret key info by failed:%v\n",err),err 
+	}
+	switch cluster.Cloud {
+	case "idc":
+		// id此处不处理
+		//nodegroups = nil 
+	case "aliyun":
+		addons ,err = pkg.AddonList(param.ClusterId,secretinfo.AccessKey,string(decodedBytes))
+	//case "aws":
+	//	nodegroups ,err = pkg.NodeGroupListByAws(param.ClusterId)
+	//case "huaweicloud":
+	//	nodegroups ,err = pkg.NodeGroupListByHuaweiCloud(param.ClusterId)
+	//case "qcloud":
+	//	nodegroups ,err = pkg.NodeGroupListByQcloud(param.ClusterId)
+	default:
+		middleware.LogErr(c).Errorf("cloud invalid")
+		return nil,fmt.Sprintf("cloud invalid"),errors.New(fmt.Sprintf("cloud invalid"))
+	}
+	if err != nil {
+		middleware.LogErr(c).Errorf("get addon list by cluster:%v failed:%v\n",param.ClusterId,err)
+		return nil,fmt.Sprintf("get addon list by cluster:%v failed:%v\n",param.ClusterId,err),err
+	}
+	return addons,fmt.Sprintf("get addon list by cluster:%v success",param.ClusterId),nil 
+}
 func NodeGroupList(c *gin.Context,param models.ParamGetNodeGroup) (interface{},string,error) {
 	var (
 		nodegroups interface{}

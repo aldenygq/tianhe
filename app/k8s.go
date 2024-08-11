@@ -7,7 +7,24 @@ import (
 	"fmt"
 	"tianhe/service"
 )
+func AddonList(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	var param models.ParamClusterId
+	err := ctx.Validate(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		return
+	}
+	data,msg,err := service.AddonList(ctx.Ctx,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("%v",err))
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
 
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, data)
+	return
+}
 func NodeGroupList(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	var param models.ParamGetNodeGroup

@@ -139,9 +139,11 @@ func registerK8sRouter(k8s *gin.RouterGroup) {
 		//获取k8s集群user列表
 		k.GET("/userList",app.ClusterUserList)
 		//获取节点池列表
-		k.GET("nodeGroup",app.NodeGroupList)
+		k.GET("/nodeGroup",app.NodeGroupList)
 		//获取节点池下节点列表
-		k.GET("nodeListByNodeGroup",app.NodeListByNodeGroup)
+		k.GET("/nodeListByNodeGroup",app.NodeListByNodeGroup)
+		//获取集群插件列表
+		k.GET("/addonList",app.AddonList)
 	}
 }
 //健康检测

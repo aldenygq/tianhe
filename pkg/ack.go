@@ -56,10 +56,25 @@ func NodeListByNodeGroup(clusterid,nodegroupid,ak,sk string) (*cs20151215.Descri
   }
   runtime := &util.RuntimeOptions{}
   headers := make(map[string]*string)
-  // 复制代码运行请自行打印 API 的返回值
   resp, err := client.DescribeClusterNodesWithOptions(tea.String(clusterid), describeClusterNodesRequest, headers, runtime)
   if err != nil {
     return nil,err
   }
+  return resp,nil 
+}
+func AddonList(clusterid,ak,sk string) (*cs20151215.ListClusterAddonInstancesResponse,error) {
+  client,err := NewClient(ak,sk)
+  if err != nil {
+    return nil,err 
+  }
+  defer CloseClient(client)
+
+  runtime := &util.RuntimeOptions{}
+  headers := make(map[string]*string)
+  resp, err := client.ListClusterAddonInstancesWithOptions(tea.String(clusterid), headers, runtime)
+  if err != nil {
+     return nil,err
+  }
+
   return resp,nil 
 }
