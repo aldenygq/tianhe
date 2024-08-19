@@ -18,6 +18,7 @@ const (
 	CURRENT_DUTY_INFO = "current_duty_info"
 	USERS             = "users"
 	HOST = "host"
+	HOST_SSH_AUTH = "host_ssh_auth"
 	K8SCLUSTER = "k8s_cluster"
 	SECRET_INFO = "cloud_secret_info"
 )
@@ -183,8 +184,8 @@ func (u *Users) List() (int64, []*Users, error) {
 		tx = tx.Where("email  = ?", u.Email)
 	case u.Status > 0 && u.Status != 3:
 		tx = tx.Where("status = ?", u.Status)
-	default:
-		return count, nil, errors.New("filed invalid")
+	//default:
+	//	return count, nil, errors.New("filed invalid")
 	}
 
 	err := tx.Find(&users).Error
@@ -256,24 +257,25 @@ func (u *Users) UpdateByMobile() error {
 }
 
 type OncallRule struct {
-	Id                  int64              `gorm:"column:id;PRIMARY_KEY;type:int(10)" json:"id"  description:"值班规则主键id"`
+	Id                  int64              `gorm:"column:id;PRIMARY_KEY;type:int(11)" json:"id"  description:"值班规则主键id"`
 	CnTitle             string             `gorm:"column:cn_title;type:varchar(256)" json:"cn_title" description:"中文标题"`
 	EnTitle             string             `gorm:"column:en_title;type:varchar(256)" json:"en_title" description:"英文标题"`
-	OncallCycleType     string             `gorm:"column:oncall_cycle_type;type:varchar(64)" json:"oncall_cycle_type" binding:"required,min=1" description:"值班周期类型,day(天)、custom(自定义)、month(月)，默认周类型，即每轮7天"`
-	StartDay            string             `gorm:"column:start_day;type:varchar(64)" json:"start_day" description:"开始日期,日期不得小于当前日期"`
-	RotationNum         int64              `gorm:"column:rotation_num;type:int(10)" json:"rotation_num" description:"轮转次数,如为0，则表示持续轮转"`
-	PerRotationDays     int64              `gorm:"column:per_rotation_days;type:int(10)" json:"per_rotation_days"  description:"每轮的轮转天数，最小值为1,最大值为30,custom必传"`
-	OncallPeopleInfos   []string           `gorm:"column:oncall_people_infos;type:json" json:"oncall_people_infos" description:"值班人员信息"`
-	IsSkipWeekend       int64              `gorm:"column:is_skip_weekend;type:int(10)" json:"is_skip_weekend" description:"是否跳过周末值班，0表示跳过，1表示不跳过，默认为0"`
+	OncallCycleType     string             `gorm:"column:oncall_cycle_type;type:varchar(256)" json:"oncall_cycle_type" binding:"required,min=1" description:"值班周期类型,day(天)、week(周)、month(月)，默认周类型，即每轮7天"`
+	StartDay            string             `gorm:"column:start_day;type:varchar(256)" json:"start_day" description:"开始日期,日期不得小于当前日期"`
+	RotationNum         int64              `gorm:"column:rotation_num;type:int(11)" json:"rotation_num" description:"轮转次数,如为0，则表示持续轮转"`
+	//PerRotationDays     int64              `gorm:"column:per_rotation_days;type:int(10)" json:"per_rotation_days"  description:"每轮的轮转天数，最小值为1,最大值为30,custom必传"`
+	//OncallPeopleInfos   []*OncallPeopleInfo `gorm:"column:oncall_people_infos;type:json" json:"oncall_people_infos" description:"值班人员信息"`
+	OncallPeopleInfos   string `gorm:"column:oncall_people_infos;type:text" json:"oncall_people_infos" description:"值班人员信息"`
+	IsSkipWeekend       int64              `gorm:"column:is_skip_weekend;type:int(11)" json:"is_skip_weekend" description:"是否跳过周末值班，0表示跳过，1表示不跳过，默认为1"`
 	SubscribeNotifyInfo []*SubscribeNotify `gorm:"column:subscribe_notify_info;type:json" json:"subscribe_notify_info" description:"订阅通知提醒信息"`
 	SubscribeGroups     []*SubscribeGroup  `gorm:"column:subscribe_groups;type:json" json:"subscribe_groups" description:"订阅组信息"`
-	IsTemporaryOncall   int64              `gorm:"column:is_temporary_oncall;type:int(10)" json:"is_temporary_oncall" description:"是否开启临时值班：0(不开启),1(开启)，默认是0不开启，当临时值班开启后，默认覆盖现有值班规则"`
+	IsTemporaryOncall   int64              `gorm:"column:is_temporary_oncall;type:int(11)" json:"is_temporary_oncall" description:"是否开启临时值班：0(不开启),1(开启)，默认是0不开启，当临时值班开启后，默认覆盖现有值班规则"`
 	TemporaryOncallInfo *TemporaryOncall   `gorm:"column:temporary_oncall_info;type:json" json:"temporary_oncall_info"  description:"临时值班信息"`
-	Status              int64              `gorm:"column:status;type:int(10)" json:"status"  description:"是否启用,0表示启用，1表示不启用,默认启用"`
-	Creator             string             `gorm:"column:creator;type:varchar(64)" json:"creator"  description:"创建者"`
-	CreateTime          string             `gorm:"column:create_time;type:varchar(64)" json:"create_time"  description:"创建时间"`
+	Status              int64              `gorm:"column:status;type:int(11)" json:"status"  description:"是否启用,0表示启用，1表示不启用,默认启用"`
+	Creator             string             `gorm:"column:creator;type:varchar(256)" json:"creator"  description:"创建者"`
+	CreateTime          int64            `gorm:"column:create_time;type:int(11)" json:"create_time"  description:"创建时间"`
 	Updator             string             `gorm:"column:updator;type:varchar(64)" json:"updator"  description:"最后一次修改人"`
-	UpdateTime          string             `gorm:"column:update_time;type:varchar(64)" json:"update_time"  description:"最后一次修改时间"`
+	UpdateTime          int64            `gorm:"column:update_time;type:int(11)" json:"update_time"  description:"最后一次修改时间"`
 }
 
 func (o *OncallRule) Create() error {
@@ -281,12 +283,14 @@ func (o *OncallRule) Create() error {
 
 	err := tx.Table(ONCALL_RULE).Create(&o).Error
 	if err != nil {
+		fmt.Printf("ERR:%v\n",err)
 		tx.Rollback()
 		return err
 	}
 
 	err = tx.Commit().Error
 	if err != nil {
+		fmt.Printf("ERR:%v\n",err)
 		return err
 	}
 
@@ -424,16 +428,12 @@ type Host struct {
 	Id       int64  `gorm:"column:id;PRIMARY_KEY;type:int(10)" json:"id"  description:"主键id"`
 	HostId string `gorm:"column:host_id;type:varchar(64);unique" json:"host_id"  description:"主机id"`
 	Mtime    int64  `gorm:"column:mtime;type:int(11)" json:"mtime" description:"修改时间"`
-	HostName   string `gorm:"column:host_name;type:varchar(256);unique" json:"host_name" description:"主机名称"`
-	HostIp string `gorm:"column:host_ip;type:varchar(256);unique" json:"host_ip" description:"主机 ip"`
-	HostType   string `gorm:"column:host_type;type:varchar(128)" json:"host_type" description:" 主机类型"`
-	Port   int64  `gorm:"column:port;type:int(10)" json:"port" description:"主机登录端口"`
-	AuthType string `gorm:"column:auth_type;type:varchar(128)" json:"auth_type" description:"登录方式:passwd/ssh_key"`
-	User string `gorm:"column:user;type:varchar(256)" json:"creator" description:"主机用户"`
-	Password string `gorm:"column:password;type:varchar(256)" json:"password" description:"主机密码"`
+	HostName   string `gorm:"column:host_name;type:varchar(256);unique" json:"host_name" description:"主机名"`
+	HostIp string `gorm:"column:host_ip;type:varchar(256);unique" json:"host_ip" description:"主机ip"`
+	HostType   string `gorm:"column:host_type;type:varchar(128)" json:"host_type" description:"主机类型"`
+	SshPort   int64  `gorm:"column:port;type:int(10)" json:"port" description:"主机登录端口"`
 	Os string `gorm:"column:os;type:varchar(128)" json:"os" description:"操作系统"`
 	OsVersion string `gorm:"column:os_version;type:varchar(128)" json:"os_version" description:"系统版本"`
-	PrivateKey string `gorm:"column:private_key;type:text" json:"private_key" description:"主机密钥"`
 	Creator string `gorm:"column:creator;type:varchar(128)" json:"creator" description:"创建者"`
 }
 
@@ -500,8 +500,33 @@ func (h *Host) GetHostById() error {
 	}
 	return nil
 } 
+type HostSshAuth struct {
+	Ctime    int64  `gorm:"column:ctime;type:int(11)" json:"ctime" description:"创建时间"`
+	Id       int64  `gorm:"column:id;PRIMARY_KEY;type:int(10)" json:"id"  description:"主键id"`
+	HostId string `gorm:"column:host_id;type:varchar(64);unique" json:"host_id"  description:"主机id"`
+	Mtime    int64  `gorm:"column:mtime;type:int(11)" json:"mtime" description:"修改时间"`
+	AuthType string `gorm:"column:auth_type;type:varchar(128)" json:"auth_type" description:"登录方式:passwd/ssh_key"`
+	User string `gorm:"column:user;type:varchar(256)" json:"creator" description:"主机用户"`
+	Password string `gorm:"column:password;type:varchar(256)" json:"password" description:"主机密码"`
+	PrivateKey string `gorm:"column:private_key;type:text" json:"private_key" description:"主机密钥"`
+	Creator string `gorm:"column:creator;type:varchar(128)" json:"creator" description:"创建者"`
+}
+func (s *HostSshAuth) Create() error {
+	tx := middleware.Sql.Begin()
 
+	err := tx.Table(HOST_SSH_AUTH).Create(s).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
 
+	err = tx.Commit().Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 type K8sCluster struct {
 	Ctime    int64  `gorm:"column:ctime;type:int(11)" json:"ctime" description:"创建时间"`
 	Id       int64  `gorm:"column:id;PRIMARY_KEY;type:int(10)" json:"id"  description:"主键id"`

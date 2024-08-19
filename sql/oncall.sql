@@ -1,0 +1,20 @@
+CREATE TABLE `oncall_rule` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `cn_title` varchar(256) NOT NULL DEFAULT '' COMMENT '中文标题',
+  `en_title` varchar(256) NOT NULL DEFAULT '' COMMENT '英文标题',
+  `oncall_cycle_type` varchar(256) NOT NULL DEFAULT '' COMMENT '值班周期类型',
+  `start_day` varchar(256) NOT NULL DEFAULT '' COMMENT '开始日期',
+  `rotation_num` varchar(256) NOT NULL DEFAULT '' COMMENT '轮转次数',
+  `oncall_people_infos` json COMMENT '值班人员列表',
+  `is_skip_weekend` int(11) NOT NULL DEFAULT '1' COMMENT '是否跳过周末值班',
+  `subscribe_notify_info` json COMMENT '订阅通知提醒信息',
+  `subscribe_groups` json COMMENT '订阅组信息',
+  `is_temporary_oncall` int(11) NOT NULL DEFAULT '0' COMMENT '是否开启临时值班',
+  `temporary_oncall_info` json COMMENT '临时值班信息',
+  `status` int(11) not null default '0' COMMENT '值班状态',
+  `creator` varchar(256) not null default '' COMMENT '创建人',
+  `create_time` int(11) not null default '0' COMMENT '创建时间',
+  `updator` varchar(256) not null default '' COMMENT '最后一次更新人',
+  `update_time` int(11) not null default '0' COMMENT '最后一次更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8

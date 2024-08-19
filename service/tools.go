@@ -4,18 +4,18 @@ import (
 	"tianhe/pkg"
 	"tianhe/models"
 	"tianhe/middleware"
-	//"time"
-	//"unicode"
+	"time"
+	"unicode"
 
 	"github.com/gin-gonic/gin"
 	"k8s.io/client-go/tools/clientcmd"
     //"k8s.io/client-go/tools/clientcmd/api"
 )
-/*
+
 func CompareTwoDay(day1,day2 string) int64{
 	// 创建两个日期
-	d1, _ := time.Parse("2006-01-02", day1)
-	d2, _ := time.Parse("2006-01-02", day2)
+	d1, _ := time.Parse("2006/01/02", day1)
+	d2, _ := time.Parse("2006/01/02", day2)
 	
 	// 比较日期
 	if d1.Before(d2) {
@@ -42,7 +42,6 @@ func IsContainChinese(str string) bool {
 	}
 	return false
 }
-*/
 
 
 func GetK8sClientByClusterId(c *gin.Context,clusterid string) (*pkg.K8sClient,error) {

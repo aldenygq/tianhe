@@ -5,23 +5,22 @@ import (
 	"tianhe/app"
 	"tianhe/middleware"
 )
-/*
+
 func registerOncallRouter(oncall *gin.RouterGroup) {
-	t := oncall.Group("/v1")
+	t := oncall.Group("/oncall").Use(middleware.Auth())
 	{
 		//增加值班策略默认信息
-		t.GET("/defaultinfo", app.DefaultInfo).Use(middleware.Auth)
+		t.GET("/defaultinfo", app.DefaultInfo)
 		//增加值班策略
-		t.POST("/addoncall", app.AddOncall).Use(middleware.Auth)
+		t.POST("/addOncall", app.AddOncall)
 		//修改值班策略
-		t.POST("/modifyoncall", app.ModifyOncall).Use(middleware.Auth)
+		//t.POST("/modifyoncall", app.ModifyOncall).Use(middleware.Auth)
 		//获取值班规则列表
-		t.POST("/oncallrulls",app.OncallRules).Use(middleware.Auth)
+		//t.POST("/oncallrulls",app.OncallRules).Use(middleware.Auth)
 		// 获取当前值班信息
-		t.POST("/currentdutyinfos",app.CurrrentDutyInfos)
+		//t.POST("/currentdutyinfos",app.CurrrentDutyInfos)
 	}
 }
-*/
 
 //用户中心
 func registerUserRouter(user *gin.RouterGroup) {
@@ -63,8 +62,6 @@ func registerLoginRouter(auth *gin.RouterGroup) {
 		a.Use(middleware.Auth())
 		//登出
 		a.POST("/logout", app.Logout)
-		//token续期
-		//a.GET("/renewal", app.Renewal).Use(middleware.Auth)
 	}
 }
 

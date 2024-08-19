@@ -42,22 +42,7 @@ func Logout(c *gin.Context) {
 		ctx.Response(middleware.HTTP_FAIL_CODE, fmt.Sprintf("登出失败,失败原因:%v\n",err), "") 
 		return 
 	}
-	/*
-	accessToken := c.GetHeader(middleware.ACCESS_TOKEN)
-	if accessToken == "" {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("token invalid"))
-		ctx.Response(middleware.HTTP_TOKEN_INVALID, fmt.Sprintf("token无效"), "")
-		return
-	}
-	ret,err:= middleware.ParseToken(accessToken)
-	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("user logout failed:%v\n", err))
-		ctx.Response(middleware.HTTP_FAIL_CODE, fmt.Sprintf("登出失败,失败原因:%v\n",err), "") 
-		return
-	}
-	*/
 	err = middleware.DelToken(uname)
-	//err = middleware.DelToken(ret.UEnName)
 	if err != nil {
 		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("user logout failed:%v\n", err))
 		ctx.Response(middleware.HTTP_FAIL_CODE, fmt.Sprintf("登出失败,失败原因:%v\n",err), "") 

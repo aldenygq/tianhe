@@ -11,33 +11,44 @@ import (
 )
 
 func AddHost(c *gin.Context, param models.ParamAddHost) (string,error) {
-	var host *models.Host = &models.Host{}
+	var (
+		host *models.Host = &models.Host{}
+		sshinfo *models.HostSshAuth = &models.HostSshAuth{}
+	)
 	host.Creator = param.Creator
-	host.AuthType = param.AuthType
 	host.Ctime = time.Now().Unix()
 	host.HostIp = param.HostIp
 	host.HostName = param.HostName
 	host.HostType = param.HostType
 	host.Os = param.Os
 	host.OsVersion = param.OsVersion
-	host.Port = param.Port
+	host.SshPort = param.Port
 	hid,_ := pkg.GenerateUniqueID()
 	host.HostId = hid
-	switch param.AuthType {
-	case "passwd":
-		host.Password = param.Password
-	case "ssh_key":
-		host.PrivateKey = param.PrivateKey
-	default :
-		middleware.LogErr(c).Errorf("author type is %v,please provide the correct authentication method")
-		return fmt.Sprintf("author type is %v,please provide the correct authentication method"),errors.New(fmt.Sprintf("author type is %v,please provide the correct authentication method"))
-	}
-
-
 	err := host.Create()
 	if err != nil {
 		middleware.LogErr(c).Errorf("add host %v failed:%v\n",host.HostIp,err)
 		return fmt.Sprintf("add host %v failed:%v\n",host.HostIp,err),err 
+	}
+
+	sshinfo.AuthType = param.AuthType
+	sshinfo.Creator = param.Creator
+	sshinfo.Ctime = time.Now().Unix()
+	sshinfo.HostId = host.HostId
+	sshinfo.User = "root"
+	switch param.AuthType {
+	case "passwd":
+		sshinfo.Password = param.Password
+	case "ssh_key":
+		sshinfo.PrivateKey = param.PrivateKey
+	default :
+		middleware.LogErr(c).Errorf("author type is %v,please provide the correct authentication method")
+		return fmt.Sprintf("author type is %v,please provide the correct authentication method"),errors.New(fmt.Sprintf("author type is %v,please provide the correct authentication method"))
+	}
+	err = sshinfo.Create()
+	if err != nil {
+		middleware.LogErr(c).Errorf("add host user %v failed:%v\n",sshinfo.User,err)
+		return fmt.Sprintf("add host user %v failed:%v\n",sshinfo.User,err),err 
 	}
 
 	middleware.LogInfo(c).Infof("add host %v success",host.HostIp)

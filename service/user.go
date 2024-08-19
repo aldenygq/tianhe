@@ -70,7 +70,7 @@ func UserInfo(c *gin.Context,token string) (*models.Users, string, error) {
 		middleware.LogErr(c).Errorf(fmt.Sprintf("parse token failed:%v", err))
 		return nil, fmt.Sprintf("解析token失败,失败原因:%v\n", err), err
 	}
-	middleware.LogInfo(c).Infof(fmt.Sprintf("uname:",ret.UEnName))
+	middleware.LogInfo(c).Infof(fmt.Sprintf("uname:%v",ret.UEnName))
 	user.EnName = ret.UEnName
 	err = user.GetByUname()
 	if err != nil {

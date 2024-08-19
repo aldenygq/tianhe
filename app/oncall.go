@@ -1,25 +1,25 @@
 package app
 
 import (
-	"oncall/middleware"
-	"oncall/service"
+	"tianhe/middleware"
+	"tianhe/service"
 	//"oncall/service/test"
 	//"oncall/tools/resp"
 	"github.com/gin-gonic/gin"
-	"oncall/models"
+	"tianhe/models"
 )
 func DefaultInfo(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	//参数校验
 	var param models.ParamDefaultInfo
-	err := ctx.Validate(param)
+	err := ctx.Validate(&param)
 	if err != nil {
-		middleware.Logger.Error("request param invalid")
+		middleware.LogErr(ctx.Ctx).Error("request param invalid")
 		return
 	}
-	data,msg,err := service.DefaultInfo(param)
+	data,msg,err := service.DefaultInfo(ctx.Ctx,param)
 	if err != nil {
-		middleware.Logger.Error("get oncall rule list failed:",err)
+		middleware.LogErr(ctx.Ctx).Error("get oncall rule list failed:",err)
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -32,21 +32,21 @@ func AddOncall(c *gin.Context)  {
 	ctx := middleware.Context{Ctx: c}
 	//参数校验
 	var param models.ParamAddOncallRule
-	err := ctx.ValidateJson(param)
+	err := ctx.ValidateJson(&param)
 	if err != nil {
-		middleware.Logger.Error("request param invalid")
+		middleware.LogErr(ctx.Ctx).Error("request param invalid")
 		return
 	}
-	msg,err := service.AddOncall(param)
+	msg,err := service.AddOncall(ctx.Ctx,param)
 	if err != nil {
-		middleware.Logger.Error("add oncall failed:",err)
-		ctx.Response(HTTP_FAIL_CODE, msg, "")
+		middleware.LogErr(ctx.Ctx).Error("add oncall failed:",err)
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
-	ctx.Response(HTTP_SUCCESS_CODE, msg, "")
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
 	return
 }
-
+/*
 func ModifyOncall(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	//参数校验
@@ -102,4 +102,4 @@ func CurrrentDutyInfos(c *gin.Context) {
 	ctx.Response(HTTP_SUCCESS_CODE, msg, dutyperson)
 	return
 }
-
+*/

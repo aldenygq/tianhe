@@ -32,7 +32,7 @@ func (c *Context) Validate(p interface{}) error {
 func (c *Context) ValidateJson(p interface{}) error {
 	// 参数绑定
 	if err := c.Ctx.ShouldBindWith(p, binding.JSON); err != nil {
-		LogErr(c.Ctx).Errorf(fmt.Sprintf("param bind error:", err))
+		LogErr(c.Ctx).Errorf(fmt.Sprintf("param bind error:%v", err))
 		errs, _ := err.(validator.ValidationErrors)
 		c.Response(1001, removeTopStruct(c,errs.Translate(trans)), nil)
 		return err

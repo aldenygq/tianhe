@@ -73,7 +73,7 @@ func UserInfo(c *gin.Context) {
 		ctx.Response(middleware.HTTP_TOKEN_INVALID, fmt.Sprintf("用户未登录"), nil)
 		return
 	}
-	middleware.LogInfo(ctx.Ctx).Infof(fmt.Sprintf("token:",accessToken))
+	middleware.LogInfo(ctx.Ctx).Infof(fmt.Sprintf("token:%v",accessToken))
 	data,msg,err := service.UserInfo(ctx.Ctx,accessToken)
 	if err != nil {
 		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get user info failed:%v\n",err))

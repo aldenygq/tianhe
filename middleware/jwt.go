@@ -44,14 +44,15 @@ func DelToken(uname string ) error {
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		LogInfo(c).Infof(fmt.Sprintf("access token:%v\n",ACCESS_TOKEN))
+		//LogInfo(c).Infof(fmt.Sprintf("access token:%v\n",ACCESS_TOKEN))
 		auth := c.Request.Header.Get(ACCESS_TOKEN)
 		if len(auth) == 0 {
 			c.Abort()
 			LogErr(c).Errorf(fmt.Sprintf("token %v invalid\n",auth))
 			c.JSON(200, gin.H{
 				"errno":"401",
-				"errmsg": "token invalid",
+				"errmsg": fmt.Sprintf("token invalid",auth),
+				"requestid":GetRequestId(c),
 				"data":"",
 			})
 			return
@@ -62,20 +63,22 @@ func Auth() gin.HandlerFunc {
 			LogErr(c).Errorf(fmt.Sprintf("user login info expired:%v",err))
 			c.JSON(200, gin.H{
 				"errno":"401",
-				"errmsg": "user login info expired",
+				"errmsg": fmt.Sprintf("user login info expired:%v",err),
+				"requestid":GetRequestId(c),
 				"data":"",
 			})
 			return 
 		}
-		LogInfo(c).Infof(fmt.Sprintf("user name:%v",ret.UEnName))
+		//LogInfo(c).Infof(fmt.Sprintf("user name:%v",ret.UEnName))
 		val,err := RedisClient.Get(ret.UEnName).Result()
-		LogInfo(c).Infof(fmt.Sprintf("val:%v",val))
+		//LogInfo(c).Infof(fmt.Sprintf("val:%v",val))
 		if err != nil || val != auth{
 			c.Abort()
 			LogErr(c).Errorf(fmt.Sprintf("user %v not login",ret.UEnName))
 			c.JSON(200, gin.H{
 				"errno":"401",
-				"errmsg": "user login info expired",
+				"errmsg": fmt.Sprintf("user %v not login",ret.UEnName),
+				"requestid":GetRequestId(c),
 				"data":"",
 			})
 			return 
@@ -97,7 +100,7 @@ func DoLogin(c *gin.Context,enname string,expire int64) (string,error) {
 		LogErr(c).Errorf(fmt.Sprintf("create access token failed:%v",err))
 		return "",err
 	}
-	
+	LogErr(c).Infof("expire:%v\n",expire)
 	//存储登陆状态
 	err = RedisClient.Set(enname,accessToken,time.Duration(expire)*time.Second).Err()
 	if err != nil {
