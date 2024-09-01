@@ -46,6 +46,24 @@ func AddOncall(c *gin.Context)  {
 	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
 	return
 }
+func OncallInfo(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	//参数校验
+	var param models.ParamOncallInfo
+	err := ctx.Validate(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Error("request param invalid")
+		return
+	}
+	data,msg,err := service.OncallInfo(ctx.Ctx,param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Error("get oncall rule list failed:",err)
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, data)
+	return
+}
 /*
 func ModifyOncall(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
@@ -65,25 +83,44 @@ func ModifyOncall(c *gin.Context) {
 	ctx.Response(HTTP_SUCCESS_CODE, msg, "")
 	return
 }
+*/
 func OncallRules(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	//参数校验
 	var param models.ParamSearch
-	err := ctx.ValidateJson(param)
+	err := ctx.Validate(&param)
 	if err != nil {
-		middleware.Logger.Error("request param invalid")
+		middleware.LogErr(ctx.Ctx).Error("request param invalid")
 		return
 	}
-	rule,msg,err := service.OncallRules(param)
+	rule,msg,err := service.OncallRules(ctx.Ctx,param)
 	if err != nil {
-		middleware.Logger.Error("get oncall rule list failed:",err)
-		ctx.Response(HTTP_FAIL_CODE, msg, "")
+		middleware.LogErr(c).Errorf("%v",err)
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
-	ctx.Response(HTTP_SUCCESS_CODE, msg, rule)
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, rule)
 	return
 }
-
+func DeleteOncall(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	//参数校验
+	var param models.ParamOncallInfo
+	err := ctx.Validate(&param)
+	if err != nil {
+		middleware.LogErr(ctx.Ctx).Error("request param invalid")
+		return
+	}
+	msg,err := service.DeleteOncall(ctx.Ctx,param)
+	if err != nil {
+		middleware.LogErr(c).Errorf("%v",err)
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
+	return
+}
+/*
 func CurrrentDutyInfos(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	//参数校验

@@ -13,12 +13,12 @@ func registerOncallRouter(oncall *gin.RouterGroup) {
 		t.GET("/defaultinfo", app.DefaultInfo)
 		//增加值班策略
 		t.POST("/addOncall", app.AddOncall)
-		//修改值班策略
-		//t.POST("/modifyoncall", app.ModifyOncall).Use(middleware.Auth)
+		//值班详情
+		t.GET("/oncallInfo",app.OncallInfo)
 		//获取值班规则列表
-		//t.POST("/oncallrulls",app.OncallRules).Use(middleware.Auth)
-		// 获取当前值班信息
-		//t.POST("/currentdutyinfos",app.CurrrentDutyInfos)
+		t.GET("/oncallRules",app.OncallRules)
+		//删除值班规则
+		t.DELETE("/deleteOncall",app.DeleteOncall)
 	}
 }
 

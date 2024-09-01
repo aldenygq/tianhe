@@ -6,12 +6,28 @@ import (
 	"tianhe/middleware"
 	"time"
 	"unicode"
+	"sort"
 
 	"github.com/gin-gonic/gin"
 	"k8s.io/client-go/tools/clientcmd"
     //"k8s.io/client-go/tools/clientcmd/api"
 )
+//校验二维slce存在重复元素
+func CheckDuplicates(slice [][]string) bool {
+	allElements := make([]string, 0)
+	for _, innerSlice := range slice {
+		allElements = append(allElements, innerSlice...)
+	}
+	sort.Strings(allElements)
 
+	for i := 1; i < len(allElements); i++ {
+		if allElements[i-1] == allElements[i] {
+			return true
+		}
+	}
+	return false
+}
+ 
 func CompareTwoDay(day1,day2 string) int64{
 	// 创建两个日期
 	d1, _ := time.Parse("2006/01/02", day1)

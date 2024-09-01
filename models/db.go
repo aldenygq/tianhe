@@ -263,14 +263,12 @@ type OncallRule struct {
 	OncallCycleType     string             `gorm:"column:oncall_cycle_type;type:varchar(256)" json:"oncall_cycle_type" binding:"required,min=1" description:"值班周期类型,day(天)、week(周)、month(月)，默认周类型，即每轮7天"`
 	StartDay            string             `gorm:"column:start_day;type:varchar(256)" json:"start_day" description:"开始日期,日期不得小于当前日期"`
 	RotationNum         int64              `gorm:"column:rotation_num;type:int(11)" json:"rotation_num" description:"轮转次数,如为0，则表示持续轮转"`
-	//PerRotationDays     int64              `gorm:"column:per_rotation_days;type:int(10)" json:"per_rotation_days"  description:"每轮的轮转天数，最小值为1,最大值为30,custom必传"`
-	//OncallPeopleInfos   []*OncallPeopleInfo `gorm:"column:oncall_people_infos;type:json" json:"oncall_people_infos" description:"值班人员信息"`
-	OncallPeopleInfos   string `gorm:"column:oncall_people_infos;type:text" json:"oncall_people_infos" description:"值班人员信息"`
+    OncallPeopleInfos   string `gorm:"column:oncall_people_infos;type:text" json:"oncall_people_infos" description:"值班人员信息"`
 	IsSkipWeekend       int64              `gorm:"column:is_skip_weekend;type:int(11)" json:"is_skip_weekend" description:"是否跳过周末值班，0表示跳过，1表示不跳过，默认为1"`
-	SubscribeNotifyInfo []*SubscribeNotify `gorm:"column:subscribe_notify_info;type:json" json:"subscribe_notify_info" description:"订阅通知提醒信息"`
-	SubscribeGroups     []*SubscribeGroup  `gorm:"column:subscribe_groups;type:json" json:"subscribe_groups" description:"订阅组信息"`
+	SubscribeNotifyInfo string `gorm:"column:subscribe_notify_info;type:text" json:"subscribe_notify_info" description:"订阅通知提醒信息"`
+	SubscribeGroups     string  `gorm:"column:subscribe_groups;type:text" json:"subscribe_groups" description:"订阅组信息"`
 	IsTemporaryOncall   int64              `gorm:"column:is_temporary_oncall;type:int(11)" json:"is_temporary_oncall" description:"是否开启临时值班：0(不开启),1(开启)，默认是0不开启，当临时值班开启后，默认覆盖现有值班规则"`
-	TemporaryOncallInfo *TemporaryOncall   `gorm:"column:temporary_oncall_info;type:json" json:"temporary_oncall_info"  description:"临时值班信息"`
+	TemporaryOncallInfo string  `gorm:"column:temporary_oncall_info;type:text" json:"temporary_oncall_info"  description:"临时值班信息"`
 	Status              int64              `gorm:"column:status;type:int(11)" json:"status"  description:"是否启用,0表示启用，1表示不启用,默认启用"`
 	Creator             string             `gorm:"column:creator;type:varchar(256)" json:"creator"  description:"创建者"`
 	CreateTime          int64            `gorm:"column:create_time;type:int(11)" json:"create_time"  description:"创建时间"`
@@ -318,6 +316,7 @@ func (o *OncallRule) EnabledRule() ([]*OncallRule, error) {
 
 	err := tx.Table(ONCALL_RULE).Where("status = ?", 1).Find(&rules).Error
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 	err = tx.Commit().Error
@@ -327,7 +326,7 @@ func (o *OncallRule) EnabledRule() ([]*OncallRule, error) {
 
 	return rules, nil
 }
-func (o *OncallRule) List() (int64, []*OncallRule, error) {
+func (o *OncallRule) List(size,offset int) (int64, []*OncallRule, error) {
 	var (
 		total int64
 		rules []*OncallRule = make([]*OncallRule, 0)
@@ -335,8 +334,9 @@ func (o *OncallRule) List() (int64, []*OncallRule, error) {
 
 	tx :=middleware.Sql.Begin()
 
-	err := tx.Table(ONCALL_RULE).Count(&total).Find(&rules).Error
+	err := tx.Table(ONCALL_RULE).Count(&total).Limit(size).Offset(offset).Find(&rules).Error
 	if err != nil {
+		tx.Rollback()
 		return total, nil, err
 	}
 	err = tx.Commit().Error
@@ -345,6 +345,19 @@ func (o *OncallRule) List() (int64, []*OncallRule, error) {
 	}
 
 	return total, rules, nil
+}
+func (o *OncallRule) Delete() error {
+	tx :=middleware.Sql.Begin()
+	err := tx.Table(ONCALL_RULE).Where("id = ?",o.Id).Delete(&o).Error
+	if err != nil {
+		tx.Rollback()
+		return  err
+	}
+	err = tx.Commit().Error
+	if err != nil {
+		return  err
+	}
+	return nil 
 }
 
 func (o *OncallRule) Get() error {
@@ -360,8 +373,10 @@ func (o *OncallRule) Get() error {
 	}
 	err := tx.Take(&o).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
+		tx.Rollback()
 		return errors.New("oncall rule not esixt")
 	} else if err != nil {
+		tx.Rollback()
 		return err
 	}
 

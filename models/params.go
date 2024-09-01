@@ -244,33 +244,23 @@ type ParamModifyOncallRule struct {
 }
 
 type ParamSearch struct {
-	//Id int64 `form:"id"  json:"id" binding:"required,gt=0" label:"规则id"`
-	ParamOncallRule
-	CreatorInfo
-	UpdatorInfo
+	PageNum int `form:"page_num"  json:"page_num" binding:"required,gt=0" label:"起始页"`
+	PageSize int `form:"page_size"  json:"page_size" binding:"required,gt=0" label:"每页数量"`
 }
 
 type ParamOncallRule struct {
 	CnTitle string `form:"cn_title"  json:"cn_title" binding:"required,min=1,max=20" label:"中文标题"`
 	EnTitle string `form:"en_title" json:"en_title" binding:"required,min=1,max=20" label:"英文标题"`
-	//OncallCycleType string `form:"oncall_cycle_type"  json:"oncall_cycle_type" binding:"required,min=1" label:"值班周期类型" description:"支持:day(天)、month(月)、week(周)，默认周类型，即每轮7天"`
 	OncallCycleType string `form:"oncall_cycle_type" json:"oncall_cycle_type" binding:"required,min=1" label:"值班周期类型"`
-	//StartDay string  `form:"start_day" json:"start_day" binding:"required,min=1" label:"开始日期" description:"日期不得小于当前日期"`
 	StartDay string  `form:"start_day" json:"start_day" binding:"required,min=1" label:"开始日期"`
-	//RotationNum int64 `form:"rotation_num"  json:"rotation_num" binding:"required,gt=1" label:"轮转次数" description:"如为0，则表示持续轮转"`
 	RotationNum int64 `form:"rotation_num" json:"rotation_num" binding:"required" label:"轮转次数"`
-	//PerRotationDays int64 `form:"per_rotation_days"  json:"per_rotation_days" binding:"omitempty,gt=0" label:"每轮的轮转天数" description:"最小值为1,最大值为30,custom类型必传"`
 	OncallPeople [][]string`form:"oncall_people"  json:"oncall_people" binding:"required" label:"值班人员信息" description:"day类型:长度最大为7,最大值为30,custom类型必传"` 
-	//OncallPeople []*OncallPeopleInfo `form:"oncall_people" json:"oncall_people" binding:"required,dive" label:"值班人员信息"` 
-	//IsSkipWeekend int64 `form:"is_skip_weekend"  json:"is_skip_weekend" binding:"required,gt=0" label:"是否跳过周末值班" description:"是否跳过周末值班，1表示不跳过，2表示跳过，默认为不跳过(1),即周末正常值班"`
 	IsSkipWeekend int64 `form:"is_skip_weekend"  json:"is_skip_weekend" binding:"required,gt=0" label:"是否跳过周末值班"`
 	SubscribeNotifyInfo []*SubscribeNotify `form:"subscribe_notify_info"  json:"subscribe_notify_info" binding:"required,dive" label:"订阅通知提醒信息"`
 	SubscribeGroups  []*SubscribeGroup `form:"subscribe_groups"  json:"subscribe_groups" binding:"required,dive" label:"订阅组信息"`
 	IsTemporaryOncall int64 `form:"is_temporary_oncall"  json:"is_temporary_oncall" binding:"required,gt=0" label:"是否开启临时值班"`
-	//IsTemporaryOncall int64 `form:"is_temporary_oncall"  json:"is_temporary_oncall" binding:"required,gt=0" label:"是否开启临时值班" description:"是否开启临时值班：1(不开启),2(开启)，默认是1不开启，当临时值班开启后，默认覆盖现有值班规则"`
 	TemporaryOncallInfo *TemporaryOncall `form:"temporary_oncall_info"  json:"temporary_oncall_info" binding:"omitempty,min=1,dive" label:"临时值班信息"`
 	Status int64 `form:"status"  json:"status" binding:"required,gt=0" label:"是否启用"`
-	//Status int64 `form:"status"  json:"status" binding:"required,min=1" label:"是否启用" description:"是否启用,1表示启用，2表示不启用,3表示删除，默认启用(1)"`
 }
 type OncallPeopleInfo struct {
 	OncallPeoples []string `form:"oncall_peoples" json:"oncall_peoples" binding:"required" label:"值班人员列表"` 
@@ -278,6 +268,7 @@ type OncallPeopleInfo struct {
 type CreatorInfo struct{
 	Creator string `form:"creator"  json:"creator" binding:"required,min=1" label:"创建人"`
 }
+
 type UpdatorInfo struct{
 	Updator string `form:"updator"  json:"updator" binding:"required,min=1" label:"最后一次修改人"`
 }
@@ -310,4 +301,8 @@ type ParamDutyPerson struct {
 
 type ParamDefaultInfo struct {
 	Operate string `form:"operate" json:"operate" binding:"required,min=1" label:"操作类型" description:"操作类型,可选参数有:add_oncall_rule(创建值班规则)、modify_oncall_rule(修改值班规则)、search_oncall_rule(搜索值班规则)、search_oncall_user(搜索值班人员)，中英文不限"`
+	RuleId int64 `form:"rule_id" json:"rule_id" binding:"omitempty,gt=0" label:"规则id" description:"规则id"`
+}
+type ParamOncallInfo struct {
+	RuleId int64 `form:"rule_id" json:"rule_id" binding:"required,gt=0" label:"值班规则id" description:"值班规则id"`
 }
