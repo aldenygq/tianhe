@@ -1,9 +1,7 @@
 package main
 
 import (
-
-	
-	"tianhe/cmd"
+    "tianhe/cmd"
 )
 
 
