@@ -10,15 +10,17 @@ func registerOncallRouter(oncall *gin.RouterGroup) {
 	t := oncall.Group("/oncall").Use(middleware.Auth())
 	{
 		//增加值班策略默认信息
-		t.GET("/defaultinfo", app.DefaultInfo)
+		t.GET("/DefaultRuleInfo", app.DefaultInfo)
 		//增加值班策略
-		t.POST("/addOncall", app.AddOncall)
+		t.POST("/AddOncallRule", app.AddOncall)
 		//值班详情
-		t.GET("/oncallInfo",app.OncallInfo)
+		t.GET("/OncallInfo",app.OncallInfo)
 		//获取值班规则列表
-		t.GET("/oncallRules",app.OncallRules)
+		t.GET("/OncallRules",app.OncallRules)
 		//删除值班规则
-		t.DELETE("/deleteOncall",app.DeleteOncall)
+		t.DELETE("/DeleteOncallRule",app.DeleteOncall)
+		//修改值班规则
+		t.POST("/ModifyOncallRule",app.ModifyOncallRule)
 	}
 }
 
