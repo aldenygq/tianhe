@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"tianhe/models"
 )
+
+//值班默认信息
 func DefaultInfo(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	//参数校验
@@ -28,6 +30,7 @@ func DefaultInfo(c *gin.Context) {
 }
 
 
+//新增值班规则
 func AddOncall(c *gin.Context)  {
 	ctx := middleware.Context{Ctx: c}
 	//参数校验
@@ -46,6 +49,8 @@ func AddOncall(c *gin.Context)  {
 	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
 	return
 }
+
+//值班任务详情
 func OncallInfo(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	//参数校验
@@ -64,31 +69,52 @@ func OncallInfo(c *gin.Context) {
 	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, data)
 	return
 }
-/*
-func ModifyOncall(c *gin.Context) {
+
+//修改值班规则
+func ModifyOncallRule(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	//参数校验
 	var param models.ParamModifyOncallRule
-	err := ctx.ValidateJson(param)
+	err := ctx.ValidateJson(&param)
 	if err != nil {
-		middleware.Logger.Error("request param invalid")
+		middleware.LogErr(c).Errorf("request param invalid")
 		return
 	}
-	msg,err := service.ModifyOncall(param)
+	msg,err := service.ModifyOncallRule(ctx.Ctx,param)
 	if err != nil {
-		middleware.Logger.Error("modify oncall failed:",err)
-		ctx.Response(HTTP_FAIL_CODE, msg, "")
+		middleware.LogErr(c).Error("%v",err)
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
-	ctx.Response(HTTP_SUCCESS_CODE, msg, "")
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
 	return
 }
-*/
+
+//修改值班规则状态
+func ModifyOncallRuleStatus(c *gin.Context) {
+	ctx := middleware.Context{Ctx: c}
+	//参数校验
+	var param models.ParamModifyOncallRuleStatus
+	err := ctx.ValidateJson(&param)
+	if err != nil {
+		middleware.LogErr(c).Errorf("request param invalid")
+		return
+	}
+	msg,err := service.ModifyOncallRuleStatus(ctx.Ctx,param)
+	if err != nil {
+		middleware.LogErr(c).Error("%v",err)
+		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
+		return
+	}
+	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, "")
+	return
+}
+//值班规则列表
 func OncallRules(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	//参数校验
 	var param models.ParamSearch
-	err := ctx.Validate(&param)
+	err := ctx.ValidateJson(&param)
 	if err != nil {
 		middleware.LogErr(ctx.Ctx).Error("request param invalid")
 		return
@@ -102,6 +128,7 @@ func OncallRules(c *gin.Context) {
 	ctx.Response(middleware.HTTP_SUCCESS_CODE, msg, rule)
 	return
 }
+//删除值班规则
 func DeleteOncall(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	//参数校验

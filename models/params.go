@@ -238,9 +238,13 @@ type ParamAddOncallRule struct {
 	CreatorInfo
 }
 type ParamModifyOncallRule struct {
-	Id int64 `form:"id"  json:"id" binding:"required,gt=0" label:"规则id"`
+	ParamOncallInfo
 	ParamOncallRule
 	UpdatorInfo
+}
+type ParamModifyOncallRuleStatus struct {
+	ParamOncallInfo
+	Status int64`form:"status"  json:"status" binding:"required,gt=0" label:"值班规则状态"`
 }
 
 type ParamSearch struct {

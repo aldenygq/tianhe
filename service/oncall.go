@@ -83,8 +83,6 @@ func AddOncall(c *gin.Context,param models.ParamAddOncallRule) (string,error) {
 	)
 
 	//开始日期不能小于当前日期
-	middleware.LogErr(c).Infof("current day:%v\n",getDay())
-	middleware.LogErr(c).Infof("start day:%v\n",param.StartDay)
 	num := CompareTwoDay(getDay(),param.StartDay)
 	if num != 0 {
 		middleware.LogErr(c).Errorf("start day must greater than current day")
@@ -102,6 +100,7 @@ func AddOncall(c *gin.Context,param models.ParamAddOncallRule) (string,error) {
 			return fmt.Sprintf("临时值班信息不能为空"),errors.New("temporary oncall info can not nil")
 		}
 	}
+	
 	oncall.IsSkipWeekend = param.IsSkipWeekend
 	oncall.CnTitle = param.CnTitle
 	oncall.IsTemporaryOncall = param.IsTemporaryOncall
@@ -176,9 +175,9 @@ func OncallInfo(c *gin.Context,param models.ParamOncallInfo) (*models.OncallRule
 
 	return data,fmt.Sprintf("get oncall rule info by id:%v success",param.RuleId),nil 
 }
-/*
+
 //修改值班规则
-func ModifyOncall(param *models.ParamModifyOncallRule) (string,error) {
+func ModifyOncallRule(c *gin.Context,param models.ParamModifyOncallRule) (string,error) {
 	var (
 		//msg string
 		err error
@@ -188,49 +187,51 @@ func ModifyOncall(param *models.ParamModifyOncallRule) (string,error) {
 	//开始日期不能小于当前日期
 	num := CompareTwoDay(getDay(),param.StartDay)
 	if num != 0 {
-		middleware.Logger.Errorf("start day must greater than current day")
+		middleware.LogErr(c).Errorf("start day must greater than current day")
 		return fmt.Sprintf("开始日期应大于当前日期"),errors.New("start day must greater than current day")
 	}
-	
-	//自定义类型轮转天数不能小于0
-	if param.OncallCycleType == "custom" {
-		if param.PerRotationDays <= 0 {
-			middleware.Logger.Errorf("custom type rotation days must be greater than 0")
-			return fmt.Sprintf("自定义类型轮转天数必须大于0"),errors.New("custom type rotation days must be greater than 0")
-		}
+	//校验值班是否存在重复元素
+	if CheckDuplicates(param.OncallPeople) {
+		middleware.LogErr(c).Errorf("there is a duplication of duty among the on duty personnel")
+		return fmt.Sprintf("值班人员列表不能重复"),errors.New("值班人员列表不能重复")
 	}
 	//临时值班开启
-	if param.IsTemporaryOncall == 0 {
+	if param.IsTemporaryOncall == 2 {
 		if param.TemporaryOncallInfo == nil {
-			middleware.Logger.Errorf("temporary oncall info can not nil")
+			middleware.LogErr(c).Errorf("temporary oncall info can not nil")
 			return fmt.Sprintf("临时值班信息不能为空"),errors.New("temporary oncall info can not nil")
 		}
 	}
-	
-	oncall.Id = param.Id
+	//修改定时任务信息
+	//第一步，校验值班规则状态，启用状态下无法修改
+	//第二步，更新数据
+	oncall.Id = param.RuleId
 	oncall.IsSkipWeekend = param.IsSkipWeekend
-	oncall.CnTitle = param.EnTitle
+	oncall.CnTitle = param.CnTitle
 	oncall.IsTemporaryOncall = param.IsTemporaryOncall
-	oncall.PerRotationDays = param.PerRotationDays
 	oncall.OncallCycleType = param.OncallCycleType
-	oncall.OncallPeopleInfos = param.OncallPeople
+	oncallpeople,_ := json.Marshal(param.OncallPeople)
+	oncall.OncallPeopleInfos = string(oncallpeople)
 	oncall.StartDay = param.StartDay
-	oncall.SubscribeGroups = param.SubscribeGroups
+	subgroups,_ := json.Marshal(param.SubscribeGroups)
+	oncall.SubscribeGroups = string(subgroups)
 	oncall.EnTitle = param.EnTitle
-	oncall.TemporaryOncallInfo = param.TemporaryOncallInfo
+	temoncall,_:= json.Marshal(param.TemporaryOncallInfo)
+	oncall.TemporaryOncallInfo = string(temoncall)
 	oncall.Status = param.Status
-	oncall.SubscribeNotifyInfo = param.SubscribeNotifyInfo
+	subnotify,_ := json.Marshal(param.SubscribeNotifyInfo)
+	oncall.SubscribeNotifyInfo = string(subnotify)
 	oncall.RotationNum = param.RotationNum
-	oncall.Creator = param.Updator
-	oncall.CreateTime = time.Now().Format("2006-01-02 15:04:05")
+	oncall.Updator = param.Updator
+	oncall.UpdateTime = time.Now().Unix()
 	err = oncall.Modify()
 	if err != nil {
-		middleware.Logger.Errorf("add oncall rule failed:%v\n",err)
+		middleware.LogErr(c).Errorf("add oncall rule failed:%v\n",err)
 		return fmt.Sprintf("修改值班规则失败,失败原因:%v\n",err),err
 	}
 	return fmt.Sprintf("修改值班规则成功"),nil
 }
-*/
+
 //值班规则列表
 func OncallRules(c *gin.Context,param models.ParamSearch) (*models.RespOncallRules,string,error) {
 	var (
@@ -270,12 +271,31 @@ func DeleteOncall(c *gin.Context,param models.ParamOncallInfo) (string,error) {
 		oncall *models.OncallRule = &models.OncallRule{}
 	)
 	oncall.Id = param.RuleId
+	//校验值班规则状态，启用状态下无法删除
+
+
+	//删除数据库中的任务
 	err := oncall.Delete()
 	if err != nil {
 		middleware.LogErr(c).Errorf("delete oncall rule info by id %v failed:%v\n",param.RuleId,err)
 		return fmt.Sprintf("delete oncall rule info by id %v failed:%v\n",param.RuleId,err),err 
 	}
 	return fmt.Sprintf("delete oncall rule info by id %v success",param.RuleId),nil 
+}
+func ModifyOncallRuleStatus(c *gin.Context,param models.ParamModifyOncallRuleStatus) (string,error) {
+	var (
+		oncall *models.OncallRule = &models.OncallRule{}
+	)
+	//新增/删除定时任务中的
+	//修改数据
+	oncall.Id = param.RuleId
+	oncall.Status = param.Status
+	err := oncall.Modify()
+	if err != nil {
+		middleware.LogErr(c).Errorf("%v oncall rule :%v failed:%v\n",param.Status,param.RuleId,err)
+		return fmt.Sprintf("%v oncall rule :%v failed:%v",param.Status,param.RuleId,err),err 
+	}
+	return fmt.Sprintf("%v oncall rule :%v success",param.Status,param.RuleId),nil 
 }
 /*
 func CurrrentDutyInfos(param models.ParamDutyPerson) ([]*models.RespDutyPerson,string,error){

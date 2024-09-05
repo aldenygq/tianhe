@@ -16,11 +16,14 @@ func registerOncallRouter(oncall *gin.RouterGroup) {
 		//值班详情
 		t.GET("/OncallInfo",app.OncallInfo)
 		//获取值班规则列表
-		t.GET("/OncallRules",app.OncallRules)
+		t.POST("/OncallRules",app.OncallRules)
 		//删除值班规则
 		t.DELETE("/DeleteOncallRule",app.DeleteOncall)
 		//修改值班规则
-		t.POST("/ModifyOncallRule",app.ModifyOncallRule)
+		t.POST("/ModifyOncallRuleInfo",app.ModifyOncallRule)
+		//启用/禁用值班规则
+		t.POST("/ModifyOncallRuleStatus",app.ModifyOncallRuleStatus)
+		//当前值班信息
 	}
 }
 
