@@ -6,13 +6,39 @@ import (
 
 	"errors"
 	"time"
-
+	"strings"
+	"strconv"
+	"fmt"
 	"github.com/didip/tollbooth"
 	"github.com/gin-gonic/gin"
+	"github.com/satori/go.uuid"
 )
 
+func RequestId() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Check for incoming header, use it if exists
+		requestId := c.Request.Header.Get("X-Request-Id")
+		
+		// Create request id with UUID4
+		if requestId == "" {
+			requestId = GenerateUuid()
+		}
+		
+		// Expose it for use in the application
+		c.Set("X-Request-Id", requestId)
+		
+		// Set X-Request-Id header
+		c.Writer.Header().Set("X-Request-Id", requestId)
+		c.Next()
+	}
+}
+
 func GetRequestId(c *gin.Context) (value any) {
-	requestid,_ := c.Get("X-Request-Id")
+	requestid,has := c.Get("X-Request-Id")
+	if !has {
+			u4 := uuid.NewV4()
+			requestid = u4.String()
+	}
 	return requestid
 }
 
@@ -109,4 +135,41 @@ func IsHttps(c *gin.Context) bool {
 	return false
 }
 
-
+func CustomError(c *gin.Context) {
+	defer func() {
+		if err := recover(); err != nil {
+			
+			if c.IsAborted() {
+				c.Status(200)
+			}
+			switch errStr := err.(type) {
+			case string:
+				p := strings.Split(errStr, "#")
+				if len(p) == 3 && p[0] == "CustomError" {
+					statusCode, e := strconv.Atoi(p[1])
+					if e != nil {
+						break
+					}
+					c.Status(statusCode)
+					fmt.Println(
+						time.Now().Format("\n 2006-01-02 15:04:05.9999"),
+						"[ERROR]",
+						c.Request.Method,
+						c.Request.URL,
+						statusCode,
+						c.Request.RequestURI,
+						c.ClientIP(),
+						p[2],
+					)
+					c.JSON(http.StatusOK, gin.H{
+						"code": statusCode,
+						"msg":  p[2],
+					})
+				}
+			default:
+				panic(err)
+			}
+		}
+	}()
+	c.Next()
+}

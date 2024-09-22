@@ -17,13 +17,13 @@ func CheckUseLoginByUname(c *gin.Context) {
 	var param models.ParamUserEnName
 	err := ctx.Validate(&param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		middleware.Log(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
 		return
 	}
 
 	token, msg, err := service.CheckUseLoginByUname(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("check user %v login status failed:%v\n",param.EnName,err))
+		middleware.Log(ctx.Ctx).Errorf(fmt.Sprintf("check user %v login status failed:%v\n",param.EnName,err))
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -38,17 +38,17 @@ func Logout(c *gin.Context) {
 	ctx := middleware.Context{Ctx: c}
 	uname,err := GetUserByToken(ctx)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf("get user by token failed:%v\n",err)
+		middleware.Log(ctx.Ctx).Errorf("get user by token failed:%v\n",err)
 		ctx.Response(middleware.HTTP_FAIL_CODE, fmt.Sprintf("登出失败,失败原因:%v\n",err), "") 
 		return 
 	}
 	err = middleware.DelToken(uname)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("user logout failed:%v\n", err))
+		middleware.Log(ctx.Ctx).Errorf(fmt.Sprintf("user logout failed:%v\n", err))
 		ctx.Response(middleware.HTTP_FAIL_CODE, fmt.Sprintf("登出失败,失败原因:%v\n",err), "") 
 		return
 	}
-	middleware.LogInfo(ctx.Ctx).Infof(fmt.Sprintf("user logout success"))
+	middleware.Log(ctx.Ctx).Infof(fmt.Sprintf("user logout success"))
 	ctx.Response(middleware.HTTP_SUCCESS_CODE, fmt.Sprintf("登出成功"), "")
 	return
 }
@@ -61,13 +61,13 @@ func Login(c *gin.Context) {
 
 	err := ctx.ValidateJson(&param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
+		middleware.Log(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid:%v",err))
 		return
 	}
 
 	data,msg, err := service.Login(ctx.Ctx, param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("modify user %v password failed:%v\n", param.Mobile, err))
+		middleware.Log(ctx.Ctx).Errorf(fmt.Sprintf("modify user %v password failed:%v\n", param.Mobile, err))
 		ctx.Response(middleware.HTTP_CHECK_FAILED, fmt.Sprintf("重置密码失败，请联系系统管理员处理!"), data)
 		return
 	}
@@ -84,18 +84,18 @@ func SendSms(c *gin.Context) {
 	var param models.ParamMobile
 	err := ctx.ValidateJson(&param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid"))
+		middleware.Log(ctx.Ctx).Errorf(fmt.Sprintf("request param invalid"))
 		return
 	}
 
 	if toolkits.CheckMobile(param.Mobile) {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("mobile %v invalid:%v\n", param.Mobile, err))
+		middleware.Log(ctx.Ctx).Errorf(fmt.Sprintf("mobile %v invalid:%v\n", param.Mobile, err))
 		ctx.Response(middleware.HTTP_MOBILE_INVALID, fmt.Sprintf("手机号不合法"), "")
 		return
 	}
 	msg, err := service.SendSms(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("send sms to mobile %v failed:%v\n", param.Mobile, err))
+		middleware.Log(ctx.Ctx).Errorf(fmt.Sprintf("send sms to mobile %v failed:%v\n", param.Mobile, err))
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -113,7 +113,7 @@ func GetUserByToken(ctx middleware.Context) (string,error) {
 	}
 	ret,err := middleware.ParseToken(header.Token)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Errorf(fmt.Sprintf("get user by token failed:%v\n", err))
+		middleware.Log(ctx.Ctx).Errorf(fmt.Sprintf("get user by token failed:%v\n", err))
 		ctx.Response(middleware.HTTP_FAIL_CODE, fmt.Sprintf("登出失败,失败原因:%v\n",err), "") 
 		return "",err 
 	}

@@ -16,12 +16,12 @@ func DefaultInfo(c *gin.Context) {
 	var param models.ParamDefaultInfo
 	err := ctx.Validate(&param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Error("request param invalid")
+		middleware.Log(ctx.Ctx).Error("request param invalid")
 		return
 	}
 	data,msg,err := service.DefaultInfo(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Error("get oncall rule list failed:",err)
+		middleware.Log(ctx.Ctx).Error("get oncall rule list failed:",err)
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -37,12 +37,12 @@ func AddOncall(c *gin.Context)  {
 	var param models.ParamAddOncallRule
 	err := ctx.ValidateJson(&param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Error("request param invalid")
+		middleware.Log(ctx.Ctx).Error("request param invalid")
 		return
 	}
 	msg,err := service.AddOncall(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Error("add oncall failed:",err)
+		middleware.Log(ctx.Ctx).Error("add oncall failed:",err)
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -57,12 +57,12 @@ func OncallInfo(c *gin.Context) {
 	var param models.ParamOncallInfo
 	err := ctx.Validate(&param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Error("request param invalid")
+		middleware.Log(ctx.Ctx).Error("request param invalid")
 		return
 	}
 	data,msg,err := service.OncallInfo(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Error("get oncall rule list failed:",err)
+		middleware.Log(ctx.Ctx).Error("get oncall rule list failed:",err)
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -77,12 +77,12 @@ func ModifyOncallRule(c *gin.Context) {
 	var param models.ParamModifyOncallRule
 	err := ctx.ValidateJson(&param)
 	if err != nil {
-		middleware.LogErr(c).Errorf("request param invalid")
+		middleware.Log(c).Errorf("request param invalid")
 		return
 	}
 	msg,err := service.ModifyOncallRule(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(c).Error("%v",err)
+		middleware.Log(c).Error("%v",err)
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -97,12 +97,12 @@ func ModifyOncallRuleStatus(c *gin.Context) {
 	var param models.ParamModifyOncallRuleStatus
 	err := ctx.ValidateJson(&param)
 	if err != nil {
-		middleware.LogErr(c).Errorf("request param invalid")
+		middleware.Log(c).Errorf("request param invalid")
 		return
 	}
 	msg,err := service.ModifyOncallRuleStatus(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(c).Error("%v",err)
+		middleware.Log(c).Error("%v",err)
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -116,12 +116,12 @@ func OncallRules(c *gin.Context) {
 	var param models.ParamSearch
 	err := ctx.ValidateJson(&param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Error("request param invalid")
+		middleware.Log(ctx.Ctx).Error("request param invalid")
 		return
 	}
 	rule,msg,err := service.OncallRules(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(c).Errorf("%v",err)
+		middleware.Log(c).Errorf("%v",err)
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}
@@ -135,12 +135,12 @@ func DeleteOncall(c *gin.Context) {
 	var param models.ParamOncallInfo
 	err := ctx.Validate(&param)
 	if err != nil {
-		middleware.LogErr(ctx.Ctx).Error("request param invalid")
+		middleware.Log(ctx.Ctx).Error("request param invalid")
 		return
 	}
 	msg,err := service.DeleteOncall(ctx.Ctx,param)
 	if err != nil {
-		middleware.LogErr(c).Errorf("%v",err)
+		middleware.Log(c).Errorf("%v",err)
 		ctx.Response(middleware.HTTP_FAIL_CODE, msg, "")
 		return
 	}

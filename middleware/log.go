@@ -2,24 +2,27 @@ package middleware
 
 import (
 	"bufio"
-	"tianhe/config"
+	"context"
 	"os"
 	"path"
+	"tianhe/config"
 	"time"
-	
+
+	"log"
+
+	"github.com/aldenygq/toolkits"
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/gin-gonic/gin"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
-	"github.com/aldenygq/toolkits"
-	"log"
 )
 
 var (
 	apiLogger *logrus.Logger
 	busLogger *logrus.Logger
 	gormLogger *logrus.Logger
+	CronLogger *logrus.Logger
 )
 
 
@@ -89,7 +92,6 @@ func InitApiLog() gin.HandlerFunc {
 	apiLogger = logrus.New()
 	apiLogger.AddHook(initLog(apiLogger,config.Conf.Log.Logfile.Api))
 	// 新增 Hook
-	//apiLogger.AddHook(apilfHook)
 	return func(c *gin.Context) {
 		uri := c.Request.RequestURI
 		//开始时间
@@ -131,19 +133,23 @@ func InitApiLog() gin.HandlerFunc {
 	}
 }
 
-func InitLog() {
+func InitBusLog() {
 	busLogger = logrus.New()
 	busLogger.AddHook(initLog(busLogger,config.Conf.Log.Logfile.Bus))
 }
-func InitDbLog() {
+func InitCronLog() {
+	CronLogger = logrus.New()
+	CronLogger.AddHook(initLog(CronLogger,config.Conf.Log.Logfile.Cron))
+}
+func CronLog(c *context.Context) *logrus.Entry {			
+	return CronLogger.WithField("request_id",GenerateUuid())
+}
+func InitDbLog() *logrus.Logger{
 	gormLogger = logrus.New()
 	gormLogger.AddHook(initLog(gormLogger,config.Conf.Log.Logfile.Sql))
+	return gormLogger
 }
  
-func LogInfo(c *gin.Context) *logrus.Entry {
-	return busLogger.WithField("request_id",GetRequestId(c))
-}
-
-func  LogErr(c *gin.Context) *logrus.Entry {
+func Log(c *gin.Context) *logrus.Entry {
 	return busLogger.WithField("request_id",GetRequestId(c))
 }

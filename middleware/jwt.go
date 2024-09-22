@@ -48,7 +48,7 @@ func Auth() gin.HandlerFunc {
 		auth := c.Request.Header.Get(ACCESS_TOKEN)
 		if len(auth) == 0 {
 			c.Abort()
-			LogErr(c).Errorf(fmt.Sprintf("token %v invalid\n",auth))
+			Log(c).Errorf(fmt.Sprintf("token %v invalid\n",auth))
 			c.JSON(200, gin.H{
 				"errno":"401",
 				"errmsg": fmt.Sprintf("token invalid",auth),
@@ -60,7 +60,7 @@ func Auth() gin.HandlerFunc {
 		ret,err:= ParseToken(auth)
 		if err != nil {
 			c.Abort()
-			LogErr(c).Errorf(fmt.Sprintf("user login info expired:%v",err))
+			Log(c).Errorf(fmt.Sprintf("user login info expired:%v",err))
 			c.JSON(200, gin.H{
 				"errno":"401",
 				"errmsg": fmt.Sprintf("user login info expired:%v",err),
@@ -74,7 +74,7 @@ func Auth() gin.HandlerFunc {
 		//LogInfo(c).Infof(fmt.Sprintf("val:%v",val))
 		if err != nil || val != auth{
 			c.Abort()
-			LogErr(c).Errorf(fmt.Sprintf("user %v not login",ret.UEnName))
+			Log(c).Errorf(fmt.Sprintf("user %v not login",ret.UEnName))
 			c.JSON(200, gin.H{
 				"errno":"401",
 				"errmsg": fmt.Sprintf("user %v not login",ret.UEnName),
@@ -97,14 +97,14 @@ func DoLogin(c *gin.Context,enname string,expire int64) (string,error) {
 	}
 	accessToken, err :=customClaims.MakeToken()
 	if err != nil {
-		LogErr(c).Errorf(fmt.Sprintf("create access token failed:%v",err))
+		Log(c).Errorf(fmt.Sprintf("create access token failed:%v",err))
 		return "",err
 	}
-	LogErr(c).Infof("expire:%v\n",expire)
+	Log(c).Infof("expire:%v\n",expire)
 	//存储登陆状态
 	err = RedisClient.Set(enname,accessToken,time.Duration(expire)*time.Second).Err()
 	if err != nil {
-		LogErr(c).Errorf(fmt.Sprintf("save access token to redis failed:%v",accessToken))
+		Log(c).Errorf(fmt.Sprintf("save access token to redis failed:%v",accessToken))
 		return "",err
 	}
 	

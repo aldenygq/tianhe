@@ -19,7 +19,7 @@ import (
 func (c *Context) Validate(p interface{}) error {
 	// 参数绑定
 	if err := c.Ctx.ShouldBindWith(p, binding.Query); err != nil {
-		LogErr(c.Ctx).Errorf(fmt.Sprintf("param bind error:", err))
+		Log(c.Ctx).Errorf(fmt.Sprintf("param bind error:", err))
 		errs, _ := err.(validator.ValidationErrors)
 		c.Response(1001, removeTopStruct(c,errs.Translate(trans)),nil)
 		return err
@@ -32,7 +32,7 @@ func (c *Context) Validate(p interface{}) error {
 func (c *Context) ValidateJson(p interface{}) error {
 	// 参数绑定
 	if err := c.Ctx.ShouldBindWith(p, binding.JSON); err != nil {
-		LogErr(c.Ctx).Errorf(fmt.Sprintf("param bind error:%v", err))
+		Log(c.Ctx).Errorf(fmt.Sprintf("param bind error:%v", err))
 		errs, _ := err.(validator.ValidationErrors)
 		c.Response(1001, removeTopStruct(c,errs.Translate(trans)), nil)
 		return err
@@ -45,7 +45,7 @@ func (c *Context) ValidateJson(p interface{}) error {
 func (c *Context) ValidateHeader(p interface{}) error {
 	// 参数绑定
 	if err := c.Ctx.ShouldBindWith(p, binding.Header); err != nil {
-		LogErr(c.Ctx).Errorf(fmt.Sprintf("param bind error:", err))
+		Log(c.Ctx).Errorf(fmt.Sprintf("param bind error:", err))
 		errs, _ := err.(validator.ValidationErrors)
 		c.Response(1001, removeTopStruct(c,errs.Translate(trans)), nil)
 		return err
@@ -57,7 +57,7 @@ func (c *Context) ValidateHeader(p interface{}) error {
 // ShouldBindUri
 func (c *Context) ValidateRouter(p interface{}) error {
 	if err := c.Ctx.ShouldBindUri(p); err != nil {
-		LogErr(c.Ctx).Errorf(fmt.Sprintf("param bind error:", err))
+		Log(c.Ctx).Errorf(fmt.Sprintf("param bind error:", err))
 		c.Response(1001, err.Error(),nil)
 		return err
 	}
@@ -137,7 +137,7 @@ func removeTopStruct(c *Context,fields map[string]string) string {
 		resp = append(resp, value)
 	}
 	data, _ := json.Marshal(res)
-	LogInfo(c.Ctx).Infof(fmt.Sprintf("data:", string(data)))
+	Log(c.Ctx).Infof(fmt.Sprintf("data:", string(data)))
 	response := strings.Join(resp, ",")
 	return response
 }

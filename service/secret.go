@@ -27,12 +27,12 @@ func AddCloudSecret(c *gin.Context,param models.ParamAddCloudSecret) (string,err
 	secretinfo.Status = 1
 	secretinfo.SecreyKey = base64.StdEncoding.EncodeToString([]byte(param.SecretKey))
 	if secretinfo.Exist() {
-		middleware.LogErr(c).Errorf("accesskey:%v exist",param.AccessKey)
+		middleware.Log(c).Errorf("accesskey:%v exist",param.AccessKey)
 		return fmt.Sprintf("accesskey:%v exist",param.AccessKey),errors.New(fmt.Sprintf("accesskey:%v exist",param.AccessKey))
 	}
 	err = secretinfo.Create()
 	if err != nil {
-		middleware.LogErr(c).Errorf("cloud:%v,accesskey:%v,product:%v,account:%v,env:%v,create failed:%v\n",param.Cloud,param.AccessKey,param.ParamCloudProduct,param.CloudAccount,param.Env,err)
+		middleware.Log(c).Errorf("cloud:%v,accesskey:%v,product:%v,account:%v,env:%v,create failed:%v\n",param.Cloud,param.AccessKey,param.ParamCloudProduct,param.CloudAccount,param.Env,err)
 		return fmt.Sprintf("create failed"),err 
 	}
 	

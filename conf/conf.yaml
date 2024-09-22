@@ -17,6 +17,7 @@ log:
     api: api.log
     bus: tianhe.log
     sql: sql.log
+    cron: cron.log
 
 server:
   ishttps: false

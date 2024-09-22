@@ -27,7 +27,7 @@ func AddHost(c *gin.Context, param models.ParamAddHost) (string,error) {
 	host.HostId = hid
 	err := host.Create()
 	if err != nil {
-		middleware.LogErr(c).Errorf("add host %v failed:%v\n",host.HostIp,err)
+		middleware.Log(c).Errorf("add host %v failed:%v\n",host.HostIp,err)
 		return fmt.Sprintf("add host %v failed:%v\n",host.HostIp,err),err 
 	}
 
@@ -42,16 +42,16 @@ func AddHost(c *gin.Context, param models.ParamAddHost) (string,error) {
 	case "ssh_key":
 		sshinfo.PrivateKey = param.PrivateKey
 	default :
-		middleware.LogErr(c).Errorf("author type is %v,please provide the correct authentication method")
+		middleware.Log(c).Errorf("author type is %v,please provide the correct authentication method")
 		return fmt.Sprintf("author type is %v,please provide the correct authentication method"),errors.New(fmt.Sprintf("author type is %v,please provide the correct authentication method"))
 	}
 	err = sshinfo.Create()
 	if err != nil {
-		middleware.LogErr(c).Errorf("add host user %v failed:%v\n",sshinfo.User,err)
+		middleware.Log(c).Errorf("add host user %v failed:%v\n",sshinfo.User,err)
 		return fmt.Sprintf("add host user %v failed:%v\n",sshinfo.User,err),err 
 	}
 
-	middleware.LogInfo(c).Infof("add host %v success",host.HostIp)
+	middleware.Log(c).Infof("add host %v success",host.HostIp)
 	return fmt.Sprintf("add host %v success",host.HostIp),nil 
 }
 
@@ -61,11 +61,11 @@ func DelHost(c *gin.Context, param models.ParamDelHost) (string,error) {
 
 	err := host.Delete()
 	if err != nil {
-		middleware.LogErr(c).Errorf("delete host %v failed:%v\n",host.HostId,err)
+		middleware.Log(c).Errorf("delete host %v failed:%v\n",host.HostId,err)
 		return fmt.Sprintf("delete host %v failed:%v\n",host.HostId,err),err 
 	}
 
-	middleware.LogInfo(c).Infof("delete host %v success",host.HostId)
+	middleware.Log(c).Infof("delete host %v success",host.HostId)
 	return fmt.Sprintf("delete host %v success",host.HostId),nil 
 }
 
@@ -74,9 +74,9 @@ func HostInfo(c *gin.Context, param models.ParamHostInfo) (*models.Host,string,e
 	host.HostId = param.HostId
 	err := host.GetHostById()
 	if err != nil {
-		middleware.LogErr(c).Errorf("get host %v info failed:%v\n",host.HostId,err)
+		middleware.Log(c).Errorf("get host %v info failed:%v\n",host.HostId,err)
 		return nil,fmt.Sprintf("delete host %v failed:%v\n",host.HostId,err),err 
 	}
-	middleware.LogInfo(c).Infof("get host %v success",host.HostId)
+	middleware.Log(c).Infof("get host %v success",host.HostId)
 	return host,fmt.Sprintf("delete host %v success",host.HostId),nil 
 }

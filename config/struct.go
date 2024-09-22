@@ -38,6 +38,7 @@ type LogFileInfo struct {
 	Api string `yaml:api`
 	Bus string `yaml:bus`
 	Sql string `yaml:"sql"`
+	Cron string `yaml:"cron"`
 }
 type DataBase struct {
 	Host            string `yaml:"host"`

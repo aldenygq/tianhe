@@ -22,7 +22,6 @@ func SmsCheck(key, code string) (bool,error) {
 	// 用完后将连接放回连接池
 	//defer middleware.RedisClient.Close()
 	if err != nil {
-		//middleware.Logger.Errorf("get sms code by phone:%v failed:%v",key,err)
 		return false,err 
 	}
 	if val != code {

@@ -23,7 +23,8 @@ func registerOncallRouter(oncall *gin.RouterGroup) {
 		t.POST("/ModifyOncallRuleInfo",app.ModifyOncallRule)
 		//启用/禁用值班规则
 		t.POST("/ModifyOncallRuleStatus",app.ModifyOncallRuleStatus)
-		//当前值班信息
+		//当前值班信息列表
+		//t.GET("/CurrentDutyList",app.)
 	}
 }
 
@@ -150,11 +151,6 @@ func registerK8sRouter(k8s *gin.RouterGroup) {
 }
 //健康检测
 func registerHealthRouter(health *gin.RouterGroup) {
-	health.GET("/status", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"errno":"200",
-			"errmsg": "OK",
-			"data":"",
-		})
-	})
+	health.GET("/status", app.HealthCheck)
 }
+

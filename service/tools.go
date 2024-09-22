@@ -67,12 +67,12 @@ func GetK8sClientByClusterId(c *gin.Context,clusterid string) (*pkg.K8sClient,er
 	cluster.ClusterId = clusterid
 	err := cluster.GetClusterById()
 	if err != nil {
-		middleware.LogErr(c).Errorf("get cluster info by id %v failed:%v\n",clusterid,err)
+		middleware.Log(c).Errorf("get cluster info by id %v failed:%v\n",clusterid,err)
 		return nil,err 
 	}
 	client,err := pkg.NewK8sClient(cluster.Kubeconfig)
 	if err != nil {
-		middleware.LogErr(c).Errorf("new k8s cluster %v client failed:%v\n",clusterid,err)
+		middleware.Log(c).Errorf("new k8s cluster %v client failed:%v\n",clusterid,err)
 		return nil,err 
 	}
 	return client,nil 
@@ -82,7 +82,7 @@ func GetUserByKubeconfig(c *gin.Context,kubeconfig string) (string,error) {
 	// 使用clientcmd.RESTConfigFromKubeConfig将kubeconfig字符串解析为api.Config结构
 	config, err := clientcmd.Load([]byte(kubeconfig))
 	if err != nil {
-		middleware.LogErr(c).Errorf("load kubeconfig failed :%v\n",err)
+		middleware.Log(c).Errorf("load kubeconfig failed :%v\n",err)
 		return "",err 
 	}
 
@@ -90,12 +90,12 @@ func GetUserByKubeconfig(c *gin.Context,kubeconfig string) (string,error) {
 	currentContext := config.CurrentContext
 	ctx, ok := config.Contexts[currentContext]
 	if !ok {
-		middleware.LogErr(c).Errorf("get kubeconfig context info failed :%v\n",err)
+		middleware.Log(c).Errorf("get kubeconfig context info failed :%v\n",err)
 		return "",err 
 	}
 	user, ok := config.AuthInfos[ctx.AuthInfo]
     if !ok {
-		middleware.LogErr(c).Errorf("get kubeconfig user  info failed :%v\n",err)
+		middleware.Log(c).Errorf("get kubeconfig user  info failed :%v\n",err)
 		return "",err 
     }
 

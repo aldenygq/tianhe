@@ -15,6 +15,7 @@ import (
 	"tianhe/middleware"
 	"tianhe/pkg"
 	"tianhe/routers"
+	"tianhe/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
@@ -51,7 +52,8 @@ func setup() {
 	// 2. 设置 CPU 核数
 	runtime.GOMAXPROCS(config.Conf.Server.CpuNum)
 	// 2.初始化log
-	middleware.InitLog()
+	middleware.InitBusLog()
+	middleware.InitCronLog()
 	// 3. 初始化数据链接
 	middleware.InitDB()
 	//4、初始化sms客户端
@@ -62,8 +64,8 @@ func setup() {
 	//go task.Start()
 	//6.启动定时任务客户端
 	//go service.InitCron()
-	//7.初始化任务
-	//go service.OncallTask()
+	//7.初始化值班定时任务
+	go service.OncallTask()
 }
 
 func run() error {
@@ -73,7 +75,7 @@ func run() error {
 	defer func() {
 		err := middleware.Sql.Close()
 		if err != nil {
-			middleware.LogErr(&gin.Context{}).Errorf("close mysql connection failed:%v",err)
+			middleware.Log(&gin.Context{}).Errorf("close mysql connection failed:%v",err)
 		}
 	}()
 	
@@ -88,11 +90,11 @@ func run() error {
 		// 服务连接
 		if config.Conf.Server.IsHttps {
 			if err := srv.ListenAndServeTLS(config.Conf.Server.Ssl.Pem, config.Conf.Server.Ssl.Key); err != nil && err != http.ErrServerClosed {
-				middleware.LogInfo(&gin.Context{}).Infof("listen: %s", err)
+				middleware.Log(&gin.Context{}).Infof("listen: %s", err)
 			}
 		} else {
 			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				middleware.LogInfo(&gin.Context{}).Infof("listen: %s", err)
+				middleware.Log(&gin.Context{}).Infof("listen: %s", err)
 			}
 		}
 	}()
@@ -106,9 +108,9 @@ func run() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		middleware.LogErr(&gin.Context{}).Errorf("Server Shutdown:", err)
+		middleware.Log(&gin.Context{}).Errorf("Server Shutdown:", err)
 	}
-	middleware.LogInfo(&gin.Context{}).Infof("Server exiting")
+	middleware.Log(&gin.Context{}).Infof("Server exiting")
 	return nil
 }
 
