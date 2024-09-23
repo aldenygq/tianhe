@@ -244,7 +244,7 @@ type ParamModifyOncallRule struct {
 }
 type ParamModifyOncallRuleStatus struct {
 	ParamOncallInfo
-	Status int64`form:"status"  json:"status" binding:"required,gt=0" label:"值班规则状态"`
+	Status string`form:"status"  json:"status" binding:"required,min=1" label:"值班规则状态"`
 }
 
 type ParamSearch struct {
@@ -264,7 +264,7 @@ type ParamOncallRule struct {
 	SubscribeGroups  []*SubscribeGroup `form:"subscribe_groups"  json:"subscribe_groups" binding:"required,dive" label:"订阅组信息"`
 	IsTemporaryOncall int64 `form:"is_temporary_oncall"  json:"is_temporary_oncall" binding:"required,gt=0" label:"是否开启临时值班"`
 	TemporaryOncallInfo *TemporaryOncall `form:"temporary_oncall_info"  json:"temporary_oncall_info" binding:"omitempty,min=1,dive" label:"临时值班信息"`
-	Status int64 `form:"status"  json:"status" binding:"required,gt=0" label:"是否启用"`
+	Status string `form:"status"  json:"status" binding:"required,min=0" label:"是否启用"`
 }
 type OncallPeopleInfo struct {
 	OncallPeoples []string `form:"oncall_peoples" json:"oncall_peoples" binding:"required" label:"值班人员列表"` 
@@ -291,9 +291,11 @@ type SubscribeGroup struct {
 	SubscribeAddr string `form:"subscribe_addr" json:"subscribe_addr" binding:"required,min=1" label:"订阅地址"`
 }
 type SubscribeNotify struct{
-	NotifyContent string `form:"notify_content" json:"notify_content" binding:"omitempty,min=1" label:"通知内容"`
-	//IsEnabled int64 `form:"is_enabled" json:"is_enabled" binding:"omitempty,gt=0" label:"是否开启通知" description:"是否开启通知,1表示不开启，2表示开启，默认开启(1)"`
-	NotifyTime string `form:"notify_time" json:"notify_time" binding:"omitempty,min=1" label:"通知时间"`
+	NotifyContent string `form:"notify_content" json:"notify_content" binding:"required,min=1" label:"通知类型"`
+	Status string `form:"status" json:"status" binding:"required,min=1" label:"是否开启通知" description:"是否开启通知,enable表示不开启，disable表示开启，默认开启"`
+	NotifyType string `form:"notify_type" json:"notify_type" binding:"required,min=1" label:"通知类型" description:"day(按天)、week(按周)、month(按月)"`
+	NotifyFrequency string `form:"notify_frequency" json:"notify_frequency" binding:"required,min=1" label:"通知频率"`
+	NotifyTime string `form:"notify_time" json:"notify_time" binding:"required,min=1" label:"通知时间"`
 }
 
 

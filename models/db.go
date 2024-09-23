@@ -269,7 +269,7 @@ type OncallRule struct {
 	SubscribeGroups     string  `gorm:"column:subscribe_groups;type:text" json:"subscribe_groups" description:"订阅组信息"`
 	IsTemporaryOncall   int64              `gorm:"column:is_temporary_oncall;type:int(11)" json:"is_temporary_oncall" description:"是否开启临时值班：0(不开启),1(开启)，默认是0不开启，当临时值班开启后，默认覆盖现有值班规则"`
 	TemporaryOncallInfo string  `gorm:"column:temporary_oncall_info;type:text" json:"temporary_oncall_info"  description:"临时值班信息"`
-	Status              int64              `gorm:"column:status;type:int(11)" json:"status"  description:"是否启用,0表示启用，1表示不启用,默认启用"`
+	Status              string              `gorm:"column:status;type:varchar(64)" json:"status"  description:"是否启用,enable表示启用，disable表示不启用,默认启用"`
 	Creator             string             `gorm:"column:creator;type:varchar(256)" json:"creator"  description:"创建者"`
 	CreateTime          int64            `gorm:"column:create_time;type:int(11)" json:"create_time"  description:"创建时间"`
 	Updator             string             `gorm:"column:updator;type:varchar(64)" json:"updator"  description:"最后一次修改人"`
@@ -314,7 +314,7 @@ func (o *OncallRule) EnabledRule() ([]*OncallRule, error) {
 	var rules []*OncallRule = make([]*OncallRule, 0)
 	tx := middleware.Sql.Begin()
 
-	err := tx.Table(ONCALL_RULE).Where("status = ?", 1).Find(&rules).Error
+	err := tx.Table(ONCALL_RULE).Where("status = ?", "enable").Find(&rules).Error
 	if err != nil {
 		tx.Rollback()
 		return nil, err
